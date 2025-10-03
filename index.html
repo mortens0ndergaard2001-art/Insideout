@@ -17,7 +17,7 @@
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
-                #map_d115b4e6f2aacf47cacbdad878d1a985 {
+                #map_7b78e732d0bc3efcd9d57fcf33eec995 {
                     position: relative;
                     width: 100.0%;
                     height: 100.0%;
@@ -123,7 +123,10 @@
   <div class="gate-card">
     <h2>Start adgang</h2>
     <p>Indtast start-kode for at åbne kortet.</p>
-    <input id="startCode" placeholder="Startkode" autofocus />
+    <!-- FULD TASTATUR: type=text + inputmode=text + slå autocorrect fra -->
+    <input id="startCode" type="text" inputmode="text" autocomplete="one-time-code"
+           autocapitalize="off" autocorrect="off" spellcheck="false"
+           placeholder="Startkode" autofocus />
     <button id="startBtn" type="button">Åbn</button>
     <p id="startMsg" style="color:var(--err); font-weight:600;"></p>
   </div>
@@ -132,8 +135,10 @@
 <!-- Top-panel -->
 <div id="code-panel" role="region" aria-label="Kodepanel">
   <label for="kode">Indtast kode:</label>
-  <input id="kode" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code"
-         placeholder="Skriv kode" aria-describedby="feedback" />
+  <!-- FULD TASTATUR: type=text + inputmode=text (fjern numeric/pattern) -->
+  <input id="kode" type="text" inputmode="text" autocomplete="one-time-code"
+         autocapitalize="off" autocorrect="off" spellcheck="false"
+         placeholder="Skriv kode" aria-describedby="feedback" enterkeyhint="done" />
   <button id="checkBtn" type="button" title="Tjek koden">Tjek kode</button>
   <button id="resetBtn" type="button" title="Nulstil fremskridt">Nulstil</button>
   <span id="feedback" aria-live="polite"></span>
@@ -143,8 +148,8 @@
 <script>
   "use strict";
   // Disse tre linjer erstattes fra Python:
-  const MAP_ID = "map_d115b4e6f2aacf47cacbdad878d1a985";
-  const POSTS = [{"code": "1234", "name": "Post 1", "lat": 55.715006, "lon": 9.989017, "popup": "Post 1: Atletikbanen<br><i>Indtast næste kode for at fortsætte…</i>"}, {"code": "2345", "name": "Post 2", "lat": 55.714184, "lon": 9.987867, "popup": "Post 2: Bålpladsen<br><i>Indtast næste kode for at fortsætte…</i>"}, {"code": "3456", "name": "Post 3", "lat": 55.714649, "lon": 9.992448, "popup": "Post 3: Søen<br><i>Indtast næste kode for at fortsætte…</i>"}, {"code": "4567", "name": "Post 4", "lat": 55.713184, "lon": 9.989702, "popup": "Post 4: Rododendron<br><i>Indtast næste kode for at fortsætte…</i>"}, {"code": "5678", "name": "Post 5", "lat": 55.713582, "lon": 9.99129, "popup": "Post 5: Beachvolleybanerne<br><i>Indtast næste kode for at fortsætte…</i>"}, {"code": "6789", "name": "Post 6", "lat": 55.7137, "lon": 9.989384, "popup": "Post 6: Støvlevasken<br><i>Indtast næste kode for at fortsætte…</i>"}, {"code": "7891", "name": "Post 7", "lat": 55.713724, "lon": 9.987689, "popup": "Post 7: Crossfit<br><i>Indtast næste kode for at fortsætte…</i>"}, {"code": "8912", "name": "Post 8", "lat": 55.712535, "lon": 9.987702, "popup": "Post 8: Hellebjerg skiltet<br><i>Indtast næste kode for at fortsætte…</i>"}];
+  const MAP_ID = "map_7b78e732d0bc3efcd9d57fcf33eec995";
+  const POSTS = [{"code": "<><>", "name": "Post 1", "lat": 55.715006, "lon": 9.989017, "popup": "Post 1: Atletikbanen<br><i>Indtast næste kode for at fortsætte…</i>"}, {"code": "<<<<", "name": "Post 2", "lat": 55.714184, "lon": 9.987867, "popup": "Post 2: Bålpladsen<br><i>Indtast næste kode for at fortsætte…</i>"}, {"code": ">>>>", "name": "Post 3", "lat": 55.714649, "lon": 9.992448, "popup": "Post 3: Søen<br><i>Indtast næste kode for at fortsætte…</i>"}, {"code": "4567", "name": "Post 4", "lat": 55.713184, "lon": 9.989702, "popup": "Post 4: Rododendron<br><i>Indtast næste kode for at fortsætte…</i>"}, {"code": "5678", "name": "Post 5", "lat": 55.713582, "lon": 9.99129, "popup": "Post 5: Beachvolleybanerne<br><i>Indtast næste kode for at fortsætte…</i>"}, {"code": "6789", "name": "Post 6", "lat": 55.7137, "lon": 9.989384, "popup": "Post 6: Støvlevasken<br><i>Indtast næste kode for at fortsætte…</i>"}, {"code": "7891", "name": "Post 7", "lat": 55.713724, "lon": 9.987689, "popup": "Post 7: Crossfit<br><i>Indtast næste kode for at fortsætte…</i>"}, {"code": "8912", "name": "Post 8", "lat": 55.712535, "lon": 9.987702, "popup": "Post 8: Hellebjerg skiltet<br><i>Indtast næste kode for at fortsætte…</i>"}];
   const START_CODE = "Start";
 
   // Konfiguration
@@ -192,11 +197,27 @@
     if (navigator.vibrate) navigator.vibrate(ok ? [60,40,60] : 120);
   }
 
+  // Hjælper: forsøg at åbne soft keyboard ved at fokusere aggressivt.
+  // Virker i Chrome/Android. iOS kan stadig kræve et tryk (OS-begrænsning).
+  function autoFocusMobile(el){
+    if (!el) return;
+    const tryFocus = () => {
+      el.focus({ preventScroll: true });
+      if (el.setSelectionRange) {
+        const len = el.value.length;
+        el.setSelectionRange(len, len);
+      }
+    };
+    requestAnimationFrame(tryFocus);
+    setTimeout(tryFocus, 180);
+    setTimeout(tryFocus, 400);
+  }
+
   // Simpel debounce på tjek
   let lastCheck = 0;
   async function checkKode(){
     const now = Date.now();
-    if (now - lastCheck < 250) return; // throttle
+    if (now - lastCheck < 250) return;
     lastCheck = now;
 
     const field = document.getElementById('kode');
@@ -222,9 +243,9 @@
 
     if (nextIndex === POSTS.length){
       setFeedback("Alle poster låst op – flot! 🎉", true);
-      field.blur(); // giver plads til at panorere kortet på mobil
+      field.blur(); // frit panorering
     } else {
-      field.focus();
+      autoFocusMobile(field); // få keyboard op igen til næste indtastning
     }
   }
 
@@ -234,14 +255,17 @@
     gameLayer = L.layerGroup().addTo(map);
 
     // Pro-touch
-    map.scrollWheelZoom.disable(); // mindre scroll-jank på touchpads
+    map.scrollWheelZoom.disable();
     if (USE_MAX_BOUNDS && Array.isArray(MAX_BOUNDS)) map.setMaxBounds(MAX_BOUNDS);
 
     // gendan allerede låste poster ved reload
     for (let i=0;i<nextIndex;i++) showPost(POSTS[i]);
     updateProgress();
+
+    // Fokusér kodefelt hvis start-gate allerede er passeret
     const input = document.getElementById('kode');
-    if (input) input.focus();
+    const gate = document.getElementById('start-gate');
+    if (gate && gate.style.display === 'none') autoFocusMobile(input);
   }
 
   // Start-gate
@@ -249,17 +273,24 @@
     const btn = document.getElementById('startBtn');
     const inp = document.getElementById('startCode');
     const msg = document.getElementById('startMsg');
+
+    // Forsøg at vise keyboard med det samme
+    autoFocusMobile(inp);
+
     function openIfValid(){
       if ((inp.value || "").trim() === START_CODE){
         document.getElementById('start-gate').style.display = 'none';
         const input = document.getElementById('kode');
-        if (input) input.focus();
+        autoFocusMobile(input); // vis keyboard til kodefeltet straks
       } else {
         msg.textContent = "Forkert startkode.";
+        autoFocusMobile(inp);
       }
     }
     btn.addEventListener('click', openIfValid);
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') openIfValid(); });
+    // Bonus: et enkelt tap hvor som helst på overlayet fokuserer input (hjælper iOS)
+    document.getElementById('start-gate').addEventListener('touchstart', () => autoFocusMobile(inp));
   }
 
   // Event binding
@@ -278,8 +309,7 @@
       if (gameLayer) gameLayer.clearLayers();
       updateProgress();
       setFeedback("Nulstillet.");
-      const input = document.getElementById('kode');
-      if (input) input.focus();
+      autoFocusMobile(kode);
     });
 
     initGate();
@@ -287,14 +317,14 @@
   });
 </script>
     
-            <div class="folium-map" id="map_d115b4e6f2aacf47cacbdad878d1a985" ></div>
+            <div class="folium-map" id="map_7b78e732d0bc3efcd9d57fcf33eec995" ></div>
         
 </body>
 <script>
     
     
-            var map_d115b4e6f2aacf47cacbdad878d1a985 = L.map(
-                "map_d115b4e6f2aacf47cacbdad878d1a985",
+            var map_7b78e732d0bc3efcd9d57fcf33eec995 = L.map(
+                "map_7b78e732d0bc3efcd9d57fcf33eec995",
                 {
                     center: [55.713987, 9.988917],
                     crs: L.CRS.EPSG3857,
@@ -306,13 +336,13 @@
 
                 }
             );
-            L.control.scale().addTo(map_d115b4e6f2aacf47cacbdad878d1a985);
+            L.control.scale().addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
 
             
 
         
     
-            var tile_layer_9a00524fe81d7e18f9a83e5f11907ce2 = L.tileLayer(
+            var tile_layer_c04335efb148a20b67a2e638655cbf4e = L.tileLayer(
                 "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
                 {
   "minZoom": 0,
@@ -329,7 +359,7 @@
             );
         
     
-            tile_layer_9a00524fe81d7e18f9a83e5f11907ce2.addTo(map_d115b4e6f2aacf47cacbdad878d1a985);
+            tile_layer_c04335efb148a20b67a2e638655cbf4e.addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
         
     
             L.control.fullscreen(
@@ -339,15 +369,15 @@
   "titleCancel": "Exit Full Screen",
   "forceSeparateButton": false,
 }
-            ).addTo(map_d115b4e6f2aacf47cacbdad878d1a985);
+            ).addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
         
     
-            var tile_layer_d9020469b6c09e45597b3bb8a763e488 = L.tileLayer(
+            var tile_layer_0c1008b38f448935c3a7affcb0150acf = L.tileLayer(
                 "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                 {"attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors", "detect_retina": false, "max_native_zoom": 19, "max_zoom": 19, "min_zoom": 0, "no_wrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
             );
-            var mini_map_0568e53044569914aac21a7a6d3ed1d4 = new L.Control.MiniMap(
-                tile_layer_d9020469b6c09e45597b3bb8a763e488,
+            var mini_map_8eac6467b99721dbd2a072d5acd486e5 = new L.Control.MiniMap(
+                tile_layer_0c1008b38f448935c3a7affcb0150acf,
                 {
   "position": "bottomright",
   "width": 150,
@@ -362,12 +392,12 @@
   "minimized": false,
 }
             );
-            map_d115b4e6f2aacf47cacbdad878d1a985.addControl(mini_map_0568e53044569914aac21a7a6d3ed1d4);
+            map_7b78e732d0bc3efcd9d57fcf33eec995.addControl(mini_map_8eac6467b99721dbd2a072d5acd486e5);
         
     
-            var locate_control_12b521d123d255a8c0992be6dccad45f = L.control.locate(
+            var locate_control_7069e530d41a511f4d043dc38f29ce0b = L.control.locate(
                 {"flyTo": true}
-            ).addTo(map_d115b4e6f2aacf47cacbdad878d1a985);
+            ).addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
             
         
 </script>
