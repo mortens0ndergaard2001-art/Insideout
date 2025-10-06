@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    
+
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
-    
+
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
@@ -49,7 +49,7 @@
                 L_DISABLE_3D = false;
             </script>
 
-        
+
     <script src="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@3.0.0/Control.FullScreen.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@3.0.0/Control.FullScreen.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.js"></script>
@@ -58,8 +58,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-locatecontrol/0.66.2/L.Control.Locate.min.css"/>
 </head>
 <body>
-    
-    
+
+
 <style>
   :root{
     --brand:#1f7ae0; --ok:#14a44d; --err:#c62828; --bg:#fff; --ink:#222; --muted:#6b7280;
@@ -116,6 +116,17 @@
 
   /* Små popup-typografier */
   .leaflet-popup-content { line-height: 1.35; max-width: 240px; }
+
+  /* TIMER */
+  #timer{
+    position:fixed; top:12px; right:12px; z-index:10001;
+    background:var(--bg); color:var(--ink); padding:10px 14px;
+    border-radius:var(--radius); border:1px solid rgba(0,0,0,.08);
+    box-shadow:var(--shadow); font-weight:800; font-variant-numeric:tabular-nums;
+    display:none; /* hidden until started */
+  }
+  #timer.flash{ animation:tflash .35s ease }
+  @keyframes tflash{ from{ transform:scale(1.06) } to{ transform:scale(1) } }
 </style>
 
 <!-- Start-gate -->
@@ -145,6 +156,9 @@
   <div class="progress" aria-hidden="true"><div class="progress__bar" id="progressBar"></div></div>
 </div>
 
+<!-- TIMER display -->
+<div id="timer" aria-live="polite" title="Remaining time">15:00</div>
+
 <script>
   "use strict";
   // Disse tre linjer erstattes fra Python:
@@ -170,6 +184,72 @@
   const SHOW_HALO = false; // stor blå cirkel (slået FRA som standard)
   const USE_MAX_BOUNDS = false;
   const MAX_BOUNDS = [[55.7115, 9.9855], [55.7165, 9.9945]];
+
+  // ---- TIMER (15:00 start; +4:00 on correct; -0:30 on wrong) ----
+  const TIMER_KEY = 'insideout_timer_end_v1';
+  const START_DURATION_MS = 15 * 60 * 1000;
+  const BONUS_MS = 4 * 60 * 1000;
+  const PENALTY_MS = 30 * 1000;
+
+  let endAt = null;       // epoch ms when timer ends
+  let timerTick = null;   // setInterval handle
+
+  function loadEnd(){
+    try{
+      const v = Number(localStorage.getItem(TIMER_KEY) || 0);
+      return Number.isFinite(v) && v > 0 ? v : null;
+    } catch(e){ return null; }
+  }
+  function saveEnd(){
+    try{ localStorage.setItem(TIMER_KEY, String(endAt)); } catch(e){}
+  }
+  function mmss(ms){
+    const m = Math.floor(ms / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+  function renderTimer(){
+    const box = document.getElementById('timer');
+    if (!box || !endAt) return;
+    const left = Math.max(0, endAt - Date.now());
+    box.textContent = mmss(left);
+    box.style.color = left <= 60000 ? 'var(--err)' : 'var(--ink)';
+    if (left === 0){
+      clearInterval(timerTick); timerTick = null;
+      timeUp();
+    }
+  }
+  function startOrResumeTimer(initIfMissing){
+    const box = document.getElementById('timer');
+    if (!endAt) endAt = loadEnd();
+    if (!endAt && initIfMissing){
+      endAt = Date.now() + START_DURATION_MS;
+      saveEnd();
+    }
+    if (!endAt) return;
+    if (box) box.style.display = 'block';
+    if (timerTick) clearInterval(timerTick);
+    renderTimer();
+    timerTick = setInterval(renderTimer, 250);
+  }
+  function adjustTimer(deltaMs){
+    if (!endAt) return;
+    endAt = Math.max(Date.now(), endAt + deltaMs);
+    saveEnd();
+    renderTimer();
+    const box = document.getElementById('timer');
+    if (box){
+      box.classList.add('flash');
+      setTimeout(() => box.classList.remove('flash'), 350);
+    }
+  }
+  function timeUp(){
+    setFeedback("Tiden er udløbet ⏳", false);
+    const f = document.getElementById('kode');
+    const b = document.getElementById('checkBtn');
+    if (f) f.disabled = true;
+    if (b) b.disabled = true;
+  }
 
   let nextIndex = Number((() => {
     try { return localStorage.getItem(STORAGE_KEY); }
@@ -243,6 +323,7 @@
       setFeedback("Forkert kode – prøv igen.");
       field.setAttribute('aria-invalid', 'true');
       field.select();
+      adjustTimer(-PENALTY_MS);   // -30s on wrong
       return;
     }
 
@@ -251,6 +332,7 @@
     nextIndex = Math.min(nextIndex + 1, POSTS.length);
     try { localStorage.setItem(STORAGE_KEY, String(nextIndex)); } catch(e){}
     updateProgress();
+    adjustTimer(BONUS_MS);         // +4:00 on correct
     setFeedback(`${expected.name} låst op ✅`, true);
     field.value = "";
 
@@ -287,14 +369,32 @@
     const inp = document.getElementById('startCode');
     const msg = document.getElementById('startMsg');
 
+    // Hvis der allerede er en gyldig timer (reload midt i spil), genoptag og skjul gate
+    const storedEnd = loadEnd();
+    if (storedEnd && storedEnd > Date.now()){
+      endAt = storedEnd;
+      document.getElementById('start-gate').style.display = 'none';
+      startOrResumeTimer(false);
+      autoFocusMobile(document.getElementById('kode'));
+      return;
+    }
+
     // Forsøg at vise keyboard med det samme
     autoFocusMobile(inp);
 
     function openIfValid(){
       if ((inp.value || "").trim() === START_CODE){
         document.getElementById('start-gate').style.display = 'none';
-        const input = document.getElementById('kode');
-        autoFocusMobile(input); // vis keyboard til kodefeltet straks
+        // Fresh start hvis ingen gyldig gemt timer
+        const old = loadEnd();
+        if (!old || old <= Date.now()){
+          endAt = Date.now() + START_DURATION_MS;
+          saveEnd();
+        } else {
+          endAt = old;
+        }
+        startOrResumeTimer(false);
+        autoFocusMobile(document.getElementById('kode'));
       } else {
         msg.textContent = "Forkert startkode.";
         autoFocusMobile(inp);
@@ -323,6 +423,16 @@
       updateProgress();
       setFeedback("Nulstillet.");
       autoFocusMobile(kode);
+
+      // reset timer to full 15:00 and re-enable input
+      if (timerTick) clearInterval(timerTick);
+      endAt = Date.now() + START_DURATION_MS;
+      saveEnd();
+      startOrResumeTimer(false);
+      const f = document.getElementById('kode');
+      const b = document.getElementById('checkBtn');
+      if (f) f.disabled = false;
+      if (b) b.disabled = false;
     });
 
     initGate();
