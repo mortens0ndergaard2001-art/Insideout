@@ -77,11 +77,10 @@
   #kode{
     padding:10px 12px; min-width:180px; font-size:16px; border-radius:10px; border:1px solid #cfd8dc;
   }
-  #checkBtn, #resetBtn{
+  #checkBtn{
     padding:10px 14px; border-radius:10px; border:0; cursor:pointer; font-weight:600;
     background:var(--brand); color:white;
   }
-  #resetBtn{ background:#64748b; }
   #feedback{ font-weight:600; min-width:200px }
   .progress{
     width:100%; height:8px; background:rgba(0,0,0,.06); border-radius:999px; overflow:hidden;
@@ -117,12 +116,13 @@
   /* Små popup-typografier */
   .leaflet-popup-content { line-height: 1.35; max-width: 240px; }
 
-  /* TIMER */
+  /* TIMER (bigger) */
   #timer{
     position:fixed; top:12px; right:12px; z-index:10001;
-    background:var(--bg); color:var(--ink); padding:10px 14px;
+    background:var(--bg); color:var(--ink); padding:14px 18px; /* bigger */
     border-radius:var(--radius); border:1px solid rgba(0,0,0,.08);
     box-shadow:var(--shadow); font-weight:800; font-variant-numeric:tabular-nums;
+    font-size:22px; line-height:1; /* bigger */
     display:none; /* hidden until started */
   }
   #timer.flash{ animation:tflash .35s ease }
@@ -151,7 +151,6 @@
          autocapitalize="off" autocorrect="off" spellcheck="false"
          placeholder="Skriv kode" aria-describedby="feedback" enterkeyhint="done" />
   <button id="checkBtn" type="button" title="Tjek koden">Tjek kode</button>
-  <button id="resetBtn" type="button" title="Nulstil fremskridt">Nulstil</button>
   <span id="feedback" aria-live="polite"></span>
   <div class="progress" aria-hidden="true"><div class="progress__bar" id="progressBar"></div></div>
 </div>
@@ -161,10 +160,8 @@
 
 <script>
   "use strict";
-  // Disse tre linjer erstattes fra Python:
   const MAP_ID = "map_7b78e732d0bc3efcd9d57fcf33eec995";
 
-  /* <-- INDSAT: dine nye koder --> */
   const POSTS = [
     {"code": "1234", "name": "Post 1", "lat": 55.715006, "lon": 9.989017, "popup": "Post 1: Atletikbanen<br><i>Indtast næste kode for at fortsætte…</i>"},
     {"code": "2345", "name": "Post 2", "lat": 55.714184, "lon": 9.987867, "popup": "Post 2: Bålpladsen<br><i>Indtast næste kode for at fortsætte…</i>"},
@@ -175,34 +172,22 @@
     {"code": "7891", "name": "Post 7", "lat": 55.713724, "lon": 9.987689, "popup": "Post 7: Crossfit<br><i>Indtast næste kode for at fortsætte…</i>"},
     {"code": "8912", "name": "Post 8", "lat": 55.712535, "lon": 9.987702, "popup": "Post 8: Hellebjerg skiltet<br><i>Indtast næste kode for at fortsætte…</i>"}
   ];
-  /* <-- SLUT INDSAT --> */
 
   const START_CODE = "Start";
 
-  // Konfiguration
-  const STORAGE_KEY = "insideout_progress_v1";
-  const SHOW_HALO = false; // stor blå cirkel (slået FRA som standard)
+  // Konfiguration (no persistence; reload = fresh game)
+  const SHOW_HALO = false;
   const USE_MAX_BOUNDS = false;
   const MAX_BOUNDS = [[55.7115, 9.9855], [55.7165, 9.9945]];
 
   // ---- TIMER (15:00 start; +4:00 on correct; -0:30 on wrong) ----
-  const TIMER_KEY = 'insideout_timer_end_v1';
   const START_DURATION_MS = 15 * 60 * 1000;
   const BONUS_MS = 4 * 60 * 1000;
   const PENALTY_MS = 30 * 1000;
 
-  let endAt = null;       // epoch ms when timer ends
+  let endAt = null;       // epoch ms when timer ends (not persisted)
   let timerTick = null;   // setInterval handle
 
-  function loadEnd(){
-    try{
-      const v = Number(localStorage.getItem(TIMER_KEY) || 0);
-      return Number.isFinite(v) && v > 0 ? v : null;
-    } catch(e){ return null; }
-  }
-  function saveEnd(){
-    try{ localStorage.setItem(TIMER_KEY, String(endAt)); } catch(e){}
-  }
   function mmss(ms){
     const m = Math.floor(ms / 60000);
     const s = Math.floor((ms % 60000) / 1000);
@@ -219,13 +204,8 @@
       timeUp();
     }
   }
-  function startOrResumeTimer(initIfMissing){
+  function startOrResumeTimer(){
     const box = document.getElementById('timer');
-    if (!endAt) endAt = loadEnd();
-    if (!endAt && initIfMissing){
-      endAt = Date.now() + START_DURATION_MS;
-      saveEnd();
-    }
     if (!endAt) return;
     if (box) box.style.display = 'block';
     if (timerTick) clearInterval(timerTick);
@@ -235,7 +215,6 @@
   function adjustTimer(deltaMs){
     if (!endAt) return;
     endAt = Math.max(Date.now(), endAt + deltaMs);
-    saveEnd();
     renderTimer();
     const box = document.getElementById('timer');
     if (box){
@@ -251,11 +230,7 @@
     if (b) b.disabled = true;
   }
 
-  let nextIndex = Number((() => {
-    try { return localStorage.getItem(STORAGE_KEY); }
-    catch(e){ return 0; }
-  })() || 0);
-
+  let nextIndex = 0; // fresh each load
   let gameLayer;
 
   function leafletMap(){ return window[MAP_ID]; }
@@ -290,8 +265,6 @@
     if (navigator.vibrate) navigator.vibrate(ok ? [60,40,60] : 120);
   }
 
-  // Hjælper: forsøg at åbne soft keyboard ved at fokusere aggressivt.
-  // Virker i Chrome/Android. iOS kan stadig kræve et tryk (OS-begrænsning).
   function autoFocusMobile(el){
     if (!el) return;
     const tryFocus = () => {
@@ -330,7 +303,6 @@
     field.removeAttribute('aria-invalid');
     showPost(expected);
     nextIndex = Math.min(nextIndex + 1, POSTS.length);
-    try { localStorage.setItem(STORAGE_KEY, String(nextIndex)); } catch(e){}
     updateProgress();
     adjustTimer(BONUS_MS);         // +4:00 on correct
     setFeedback(`${expected.name} låst op ✅`, true);
@@ -338,9 +310,9 @@
 
     if (nextIndex === POSTS.length){
       setFeedback("Alle poster låst op – flot! 🎉", true);
-      field.blur(); // frit panorering
+      field.blur();
     } else {
-      autoFocusMobile(field); // få keyboard op igen til næste indtastning
+      autoFocusMobile(field);
     }
   }
 
@@ -353,47 +325,30 @@
     map.scrollWheelZoom.disable();
     if (USE_MAX_BOUNDS && Array.isArray(MAX_BOUNDS)) map.setMaxBounds(MAX_BOUNDS);
 
-    // gendan allerede låste poster ved reload
-    for (let i=0;i<nextIndex;i++) showPost(POSTS[i]);
     updateProgress();
 
-    // Fokusér kodefelt hvis start-gate allerede er passeret
     const input = document.getElementById('kode');
     const gate = document.getElementById('start-gate');
     if (gate && gate.style.display === 'none') autoFocusMobile(input);
   }
 
-  // Start-gate
+  // Start-gate (always fresh start on page load)
   function initGate(){
     const btn = document.getElementById('startBtn');
     const inp = document.getElementById('startCode');
     const msg = document.getElementById('startMsg');
 
-    // Hvis der allerede er en gyldig timer (reload midt i spil), genoptag og skjul gate
-    const storedEnd = loadEnd();
-    if (storedEnd && storedEnd > Date.now()){
-      endAt = storedEnd;
-      document.getElementById('start-gate').style.display = 'none';
-      startOrResumeTimer(false);
-      autoFocusMobile(document.getElementById('kode'));
-      return;
-    }
-
-    // Forsøg at vise keyboard med det samme
     autoFocusMobile(inp);
 
     function openIfValid(){
       if ((inp.value || "").trim() === START_CODE){
         document.getElementById('start-gate').style.display = 'none';
-        // Fresh start hvis ingen gyldig gemt timer
-        const old = loadEnd();
-        if (!old || old <= Date.now()){
-          endAt = Date.now() + START_DURATION_MS;
-          saveEnd();
-        } else {
-          endAt = old;
-        }
-        startOrResumeTimer(false);
+        // Fresh start every time
+        nextIndex = 0;
+        if (gameLayer) gameLayer.clearLayers();
+        updateProgress();
+        endAt = Date.now() + START_DURATION_MS;
+        startOrResumeTimer();
         autoFocusMobile(document.getElementById('kode'));
       } else {
         msg.textContent = "Forkert startkode.";
@@ -402,7 +357,6 @@
     }
     btn.addEventListener('click', openIfValid);
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') openIfValid(); });
-    // Bonus: et enkelt tap hvor som helst på overlayet fokuserer input (hjælper iOS)
     document.getElementById('start-gate').addEventListener('touchstart', () => autoFocusMobile(inp));
   }
 
@@ -410,29 +364,10 @@
   document.addEventListener('DOMContentLoaded', () => {
     const checkBtn = document.getElementById('checkBtn');
     const kode = document.getElementById('kode');
-    const resetBtn = document.getElementById('resetBtn');
 
     if (checkBtn) checkBtn.addEventListener('click', checkKode);
     if (kode) kode.addEventListener('keydown', e => {
       if (e.key === 'Enter'){ e.preventDefault(); checkKode(); }
-    });
-    if (resetBtn) resetBtn.addEventListener('click', () => {
-      try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
-      nextIndex = 0;
-      if (gameLayer) gameLayer.clearLayers();
-      updateProgress();
-      setFeedback("Nulstillet.");
-      autoFocusMobile(kode);
-
-      // reset timer to full 15:00 and re-enable input
-      if (timerTick) clearInterval(timerTick);
-      endAt = Date.now() + START_DURATION_MS;
-      saveEnd();
-      startOrResumeTimer(false);
-      const f = document.getElementById('kode');
-      const b = document.getElementById('checkBtn');
-      if (f) f.disabled = false;
-      if (b) b.disabled = false;
     });
 
     initGate();
@@ -471,7 +406,7 @@
   "maxZoom": 20,
   "maxNativeZoom": 20,
   "noWrap": false,
-  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors &copy; <a href=\"https://carto.com/attributions\">CARTO</a>",
   "subdomains": "abcd",
   "detectRetina": false,
   "tms": false,
@@ -496,7 +431,7 @@
 
             var tile_layer_0c1008b38f448935c3a7affcb0150acf = L.tileLayer(
                 "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                {"attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors", "detect_retina": false, "max_native_zoom": 19, "max_zoom": 19, "min_zoom": 0, "no_wrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+                {"attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors", "detect_retina": false, "max_native_zoom": 19, "max_zoom": 19, "min_zoom": 0, "no_wrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
             );
             var mini_map_8eac6467b99721dbd2a072d5acd486e5 = new L.Control.MiniMap(
                 tile_layer_0c1008b38f448935c3a7affcb0150acf,
