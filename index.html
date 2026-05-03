@@ -3,10 +3,12 @@
 <head>
 
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
@@ -14,119 +16,509 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
 
-            <meta name="viewport" content="width=device-width,
-                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-            <style>
-                #map_7b78e732d0bc3efcd9d57fcf33eec995 {
-                    position: relative;
-                    width: 100.0%;
-                    height: 100.0%;
-                    left: 0.0%;
-                    top: 0.0%;
-                }
-                .leaflet-container { font-size: 1rem; }
-            </style>
-
-            <style>html, body {
-                width: 100%;
-                height: 100%;
-                margin: 0;
-                padding: 0;
-            }
-            </style>
-
-            <style>#map {
-                position:absolute;
-                top:0;
-                bottom:0;
-                right:0;
-                left:0;
-                }
-            </style>
-
-            <script>
-                L_NO_TOUCH = false;
-                L_DISABLE_3D = false;
-            </script>
-
+    <meta name="viewport" content="width=device-width,
+        initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
     <script src="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@3.0.0/Control.FullScreen.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@3.0.0/Control.FullScreen.css"/>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.css"/>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-locatecontrol/0.66.2/L.Control.Locate.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-locatecontrol/0.66.2/L.Control.Locate.min.css"/>
-</head>
-<body>
 
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map_7b78e732d0bc3efcd9d57fcf33eec995 {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            left: 0;
+            top: 0;
+        }
+
+        .leaflet-container {
+            font-size: 1rem;
+        }
+    </style>
+
+    <script>
+        L_NO_TOUCH = false;
+        L_DISABLE_3D = false;
+    </script>
+
+</head>
+
+<body>
 
 <style>
   :root{
-    --brand:#1f7ae0; --ok:#14a44d; --err:#c62828; --bg:#fff; --ink:#222; --muted:#6b7280;
-    --radius:14px; --shadow:0 6px 24px rgba(0,0,0,.12);
+    --brand:#1f7ae0;
+    --ok:#14a44d;
+    --err:#c62828;
+    --bg:#fff;
+    --ink:#222;
+    --muted:#6b7280;
+    --radius:14px;
+    --shadow:0 6px 24px rgba(0,0,0,.12);
   }
+
   @media (prefers-color-scheme: dark){
-    :root{ --bg:#0b0f14; --ink:#e5e7eb; --muted:#9aa4b2; }
+    :root{
+      --bg:#0b0f14;
+      --ink:#e5e7eb;
+      --muted:#9aa4b2;
+    }
   }
+
   #code-panel{
-    position:fixed; inset:12px 12px auto 12px; left:50%; transform:translateX(-50%);
-    background:var(--bg); color:var(--ink); padding:12px 14px; border-radius:var(--radius);
-    border:1px solid rgba(0,0,0,.08); box-shadow:var(--shadow); z-index:9999;
-    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    position:fixed;
+    inset:12px 12px auto 12px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--bg);
+    color:var(--ink);
+    padding:12px 14px;
+    border-radius:var(--radius);
+    border:1px solid rgba(0,0,0,.08);
+    box-shadow:var(--shadow);
+    z-index:9999;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
   }
+
   #kode{
-    padding:10px 12px; min-width:180px; font-size:16px; border-radius:10px; border:1px solid #cfd8dc;
+    padding:10px 12px;
+    min-width:180px;
+    font-size:16px;
+    border-radius:10px;
+    border:1px solid #cfd8dc;
   }
+
   #checkBtn{
-    padding:10px 14px; border-radius:10px; border:0; cursor:pointer; font-weight:600;
-    background:var(--brand); color:white;
+    padding:10px 14px;
+    border-radius:10px;
+    border:0;
+    cursor:pointer;
+    font-weight:600;
+    background:var(--brand);
+    color:white;
   }
-  #feedback{ font-weight:600; min-width:200px }
+
+  #checkBtn:disabled,
+  #kode:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+  }
+
+  #feedback{
+    font-weight:600;
+    min-width:200px;
+  }
+
   .progress{
-    width:100%; height:8px; background:rgba(0,0,0,.06); border-radius:999px; overflow:hidden;
+    width:100%;
+    height:8px;
+    background:rgba(0,0,0,.06);
+    border-radius:999px;
+    overflow:hidden;
   }
-  .progress__bar{ height:100%; width:0; background:var(--brand); transition:width .35s; }
-  /* Diskret pulserende pin */
+
+  .progress__bar{
+    height:100%;
+    width:0;
+    background:var(--brand);
+    transition:width .35s;
+  }
+
   .pulse-marker .pin{
-    width:14px; height:14px; border-radius:50%; background:var(--brand);
-    border:3px solid #fff; box-shadow:0 0 0 2px var(--brand);
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    background:var(--brand);
+    border:3px solid #fff;
+    box-shadow:0 0 0 2px var(--brand);
   }
+
   .pulse-marker .pulse{
-    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-    width:14px; height:14px; border-radius:50%; border:2px solid var(--brand);
-    opacity:.5; animation:pulse 1.8s infinite ease-out;
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    border:2px solid var(--brand);
+    opacity:.5;
+    animation:pulse 1.8s infinite ease-out;
   }
+
   @keyframes pulse{
-    0%{ transform:translate(-50%,-50%) scale(.6); opacity:.9 }
-    100%{ transform:translate(-50%,-50%) scale(2.2); opacity:0 }
+    0%{
+      transform:translate(-50%,-50%) scale(.6);
+      opacity:.9;
+    }
+
+    100%{
+      transform:translate(-50%,-50%) scale(2.2);
+      opacity:0;
+    }
   }
-  /* Start-gate overlay */
+
   #start-gate{
-    position:fixed; inset:0; display:grid; place-items:center; background:rgba(0,0,0,.55); z-index:10000;
+    position:fixed;
+    inset:0;
+    display:grid;
+    place-items:center;
+    background:rgba(0,0,0,.55);
+    z-index:10000;
   }
+
   .gate-card{
-    background:var(--bg); color:var(--ink); width:min(520px,92vw); padding:22px; border-radius:16px;
+    background:var(--bg);
+    color:var(--ink);
+    width:min(520px,92vw);
+    padding:22px;
+    border-radius:16px;
     box-shadow:var(--shadow);
   }
-  .gate-card h2{ margin:0 0 8px }
-  .gate-card p{ margin:0 0 14px; color:var(--muted) }
-  .gate-card input{ width:100%; padding:12px 14px; font-size:16px; border-radius:12px; border:1px solid #cfd8dc; }
-  .gate-card button{ margin-top:12px; width:100%; padding:12px 14px; border-radius:12px; border:0; background:var(--brand); color:white; font-weight:700; }
 
-  /* Små popup-typografier */
-  .leaflet-popup-content { line-height: 1.35; max-width: 240px; }
-
-  /* TIMER (bigger) */
-  #timer{
-    position:fixed; top:12px; right:12px; z-index:10001;
-    background:var(--bg); color:var(--ink); padding:14px 18px; /* bigger */
-    border-radius:var(--radius); border:1px solid rgba(0,0,0,.08);
-    box-shadow:var(--shadow); font-weight:800; font-variant-numeric:tabular-nums;
-    font-size:22px; line-height:1; /* bigger */
-    display:none; /* hidden until started */
+  .gate-card h2{
+    margin:0 0 8px;
   }
-  #timer.flash{ animation:tflash .35s ease }
-  @keyframes tflash{ from{ transform:scale(1.06) } to{ transform:scale(1) } }
+
+  .gate-card p{
+    margin:0 0 14px;
+    color:var(--muted);
+  }
+
+  .gate-card input{
+    width:100%;
+    padding:12px 14px;
+    font-size:16px;
+    border-radius:12px;
+    border:1px solid #cfd8dc;
+  }
+
+  .gate-card button{
+    margin-top:12px;
+    width:100%;
+    padding:12px 14px;
+    border-radius:12px;
+    border:0;
+    background:var(--brand);
+    color:white;
+    font-weight:700;
+  }
+
+  .leaflet-popup-content{
+    line-height:1.35;
+    max-width:240px;
+  }
+
+  #timer-wrapper{
+    position:fixed;
+    top:12px;
+    right:12px;
+    z-index:10001;
+    display:none;
+    gap:10px;
+    align-items:stretch;
+  }
+
+  .timer-box{
+    background:var(--bg);
+    color:var(--ink);
+    padding:12px 14px;
+    border-radius:var(--radius);
+    border:1px solid rgba(0,0,0,.08);
+    box-shadow:var(--shadow);
+    font-variant-numeric:tabular-nums;
+    min-width:150px;
+    text-align:center;
+  }
+
+  .timer-label{
+    font-size:12px;
+    color:var(--muted);
+    font-weight:700;
+    margin-bottom:6px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+
+  .timer-time{
+    font-size:26px;
+    line-height:1;
+    font-weight:900;
+  }
+
+  .timer-buttons{
+    margin-top:10px;
+    display:flex;
+    gap:8px;
+    justify-content:center;
+  }
+
+  .timer-buttons button{
+    border:0;
+    border-radius:10px;
+    padding:8px 10px;
+    font-weight:800;
+    cursor:pointer;
+    background:var(--brand);
+    color:white;
+  }
+
+  .timer-buttons button.minus{
+    background:var(--err);
+  }
+
+  .timer-buttons button:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+  }
+
+  .timer-box.flash{
+    animation:tflash .35s ease;
+  }
+
+  @keyframes tflash{
+    from{
+      transform:scale(1.06);
+    }
+
+    to{
+      transform:scale(1);
+    }
+  }
+
+  /* DRAMATIC SLUTFASE */
+  #dramatic-overlay{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:9997;
+    background:rgba(198,40,40,0);
+    transition:background .8s ease;
+  }
+
+  body.final-phase #dramatic-overlay{
+    background:rgba(198,40,40,.28);
+  }
+
+  #phase-banner{
+    position:fixed;
+    top:110px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:10002;
+    display:none;
+    width:min(760px,92vw);
+    background:rgba(10,10,10,.88);
+    color:white;
+    border:2px solid rgba(255,255,255,.35);
+    border-radius:18px;
+    box-shadow:0 12px 40px rgba(0,0,0,.35);
+    padding:18px 22px;
+    text-align:center;
+  }
+
+  #phase-banner h1{
+    margin:0 0 8px;
+    font-size:34px;
+    font-weight:1000;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+  }
+
+  #phase-banner p{
+    margin:4px 0;
+    font-size:17px;
+    font-weight:700;
+  }
+
+  body.final-phase #phase-banner{
+    display:block;
+    animation:bannerPulse 1.2s ease-in-out infinite alternate;
+  }
+
+  @keyframes bannerPulse{
+    from{
+      transform:translateX(-50%) scale(1);
+    }
+
+    to{
+      transform:translateX(-50%) scale(1.025);
+    }
+  }
+
+  /* MISSION BOARD */
+  #mission-board{
+    position:fixed;
+    left:12px;
+    bottom:12px;
+    z-index:10001;
+    width:min(360px,92vw);
+    display:none;
+    flex-direction:column;
+    gap:10px;
+    max-height:55vh;
+    overflow:auto;
+  }
+
+  .mission-card{
+    background:rgba(255,255,255,.92);
+    color:#111;
+    border-radius:16px;
+    padding:14px 16px;
+    box-shadow:0 8px 28px rgba(0,0,0,.22);
+    border-left:10px solid #c62828;
+    backdrop-filter:blur(8px);
+    animation:missionPop .35s ease;
+  }
+
+  @media (prefers-color-scheme: dark){
+    .mission-card{
+      background:rgba(15,20,28,.92);
+      color:#f5f5f5;
+    }
+  }
+
+  .mission-card h3{
+    margin:0 0 8px;
+    font-size:18px;
+    font-weight:1000;
+  }
+
+  .mission-card p{
+    margin:4px 0;
+    font-size:15px;
+    font-weight:700;
+  }
+
+  .mission-card.red{
+    border-left-color:#c62828;
+  }
+
+  .mission-card.blue{
+    border-left-color:#1f7ae0;
+  }
+
+  .mission-card.green{
+    border-left-color:#14a44d;
+  }
+
+  .mission-card.black{
+    border-left-color:#111;
+  }
+
+  @keyframes missionPop{
+    from{
+      transform:translateY(12px) scale(.96);
+      opacity:0;
+    }
+
+    to{
+      transform:translateY(0) scale(1);
+      opacity:1;
+    }
+  }
+
+  /* RANDOM MISSION POPUP */
+  #random-mission-popup{
+    position:fixed;
+    inset:0;
+    z-index:10003;
+    display:none;
+    place-items:center;
+    background:rgba(0,0,0,.55);
+  }
+
+  .random-mission-card{
+    width:min(560px,92vw);
+    background:var(--bg);
+    color:var(--ink);
+    border-radius:22px;
+    padding:26px;
+    box-shadow:0 18px 60px rgba(0,0,0,.45);
+    border:3px solid #c62828;
+    text-align:center;
+    animation:missionPop .35s ease;
+  }
+
+  .random-mission-card h2{
+    margin:0 0 12px;
+    font-size:30px;
+    font-weight:1000;
+    color:#c62828;
+    text-transform:uppercase;
+  }
+
+  .random-mission-card p{
+    font-size:18px;
+    font-weight:700;
+    margin:8px 0;
+  }
+
+  .random-mission-card button{
+    margin-top:18px;
+    border:0;
+    border-radius:12px;
+    padding:12px 18px;
+    background:var(--brand);
+    color:white;
+    font-weight:900;
+    cursor:pointer;
+  }
+
+  @media (max-width:700px){
+    #timer-wrapper{
+      top:auto;
+      bottom:12px;
+      right:12px;
+      left:12px;
+      justify-content:center;
+    }
+
+    .timer-box{
+      min-width:0;
+      width:50%;
+      padding:10px;
+    }
+
+    .timer-time{
+      font-size:22px;
+    }
+
+    #phase-banner{
+      top:80px;
+      padding:14px 16px;
+    }
+
+    #phase-banner h1{
+      font-size:24px;
+    }
+
+    #phase-banner p{
+      font-size:14px;
+    }
+
+    #mission-board{
+      bottom:120px;
+      width:calc(100vw - 24px);
+      max-height:38vh;
+    }
+  }
 </style>
 
 <!-- Start-gate -->
@@ -134,10 +526,17 @@
   <div class="gate-card">
     <h2>Start adgang</h2>
     <p>Indtast start-kode for at åbne kortet.</p>
-    <!-- FULD TASTATUR: type=text + inputmode=text + slå autocorrect fra -->
-    <input id="startCode" type="text" inputmode="text" autocomplete="one-time-code"
-           autocapitalize="off" autocorrect="off" spellcheck="false"
-           placeholder="Startkode" autofocus />
+
+    <input id="startCode"
+           type="text"
+           inputmode="text"
+           autocomplete="one-time-code"
+           autocapitalize="off"
+           autocorrect="off"
+           spellcheck="false"
+           placeholder="Startkode"
+           autofocus />
+
     <button id="startBtn" type="button">Åbn</button>
     <p id="startMsg" style="color:var(--err); font-weight:600;"></p>
   </div>
@@ -146,166 +545,598 @@
 <!-- Top-panel -->
 <div id="code-panel" role="region" aria-label="Kodepanel">
   <label for="kode">Indtast kode:</label>
-  <!-- FULD TASTATUR: type=text + inputmode=text (fjern numeric/pattern) -->
-  <input id="kode" type="text" inputmode="text" autocomplete="one-time-code"
-         autocapitalize="off" autocorrect="off" spellcheck="false"
-         placeholder="Skriv kode" aria-describedby="feedback" enterkeyhint="done" />
+
+  <input id="kode"
+         type="text"
+         inputmode="text"
+         autocomplete="one-time-code"
+         autocapitalize="off"
+         autocorrect="off"
+         spellcheck="false"
+         placeholder="Skriv kode"
+         aria-describedby="feedback"
+         enterkeyhint="done" />
+
   <button id="checkBtn" type="button" title="Tjek koden">Tjek kode</button>
+
   <span id="feedback" aria-live="polite"></span>
-  <div class="progress" aria-hidden="true"><div class="progress__bar" id="progressBar"></div></div>
+
+  <div class="progress" aria-hidden="true">
+    <div class="progress__bar" id="progressBar"></div>
+  </div>
 </div>
 
-<!-- TIMER display -->
-<div id="timer" aria-live="polite" title="Remaining time">15:00</div>
+<!-- Timers -->
+<div id="timer-wrapper" aria-live="polite">
+
+  <div class="timer-box" id="adjustableTimerBox">
+    <div class="timer-label">Pointscore</div>
+    <div class="timer-time" id="adjustableTimer">60:00</div>
+
+    <div class="timer-buttons">
+      <button id="minus30Btn" class="minus" type="button">-30 sek</button>
+      <button id="plus30Btn" type="button">+30 sek</button>
+    </div>
+  </div>
+
+  <div class="timer-box" id="fixedTimerBox">
+    <div class="timer-label">Fast tid</div>
+    <div class="timer-time" id="fixedTimer">60:00</div>
+  </div>
+
+</div>
+
+<!-- Red transparent overlay during final phase -->
+<div id="dramatic-overlay"></div>
+
+<!-- Final phase banner -->
+<div id="phase-banner">
+  <h1>Slutfase aktiveret</h1>
+  <p>Alle bonusser tæller dobbelt.</p>
+  <p>Forkerte svar giver dobbelt straf.</p>
+  <p>Sidste mission er låst op.</p>
+</div>
+
+<!-- Mission board -->
+<div id="mission-board"></div>
+
+<!-- Random mission popup -->
+<div id="random-mission-popup">
+  <div class="random-mission-card">
+    <h2>Akut mission!</h2>
+    <p id="randomMissionTitle">Mission låst op</p>
+    <p id="randomMissionPeople">Kræver 4 personer.</p>
+    <p id="randomMissionStart">Start nu.</p>
+    <p id="randomMissionReward">Belønning: +7 minutter.</p>
+    <button id="closeRandomMissionBtn" type="button">Forstået</button>
+  </div>
+</div>
 
 <script>
   "use strict";
+
   const MAP_ID = "map_7b78e732d0bc3efcd9d57fcf33eec995";
 
   const POSTS = [
-    {"code": "1234", "name": "Post 1", "lat": 55.715006, "lon": 9.989017, "popup": "Post 1: Atletikbanen<br><i>Indtast næste kode for at fortsætte…</i>"},
-    {"code": "2345", "name": "Post 2", "lat": 55.714184, "lon": 9.987867, "popup": "Post 2: Bålpladsen<br><i>Indtast næste kode for at fortsætte…</i>"},
-    {"code": "3456", "name": "Post 3", "lat": 55.714649, "lon": 9.992448, "popup": "Post 3: Søen<br><i>Indtast næste kode for at fortsætte…</i>"},
-    {"code": "4567", "name": "Post 4", "lat": 55.713184, "lon": 9.989702, "popup": "Post 4: Rododendron<br><i>Indtast næste kode for at fortsætte…</i>"},
-    {"code": "5678", "name": "Post 5", "lat": 55.713582, "lon": 9.99129, "popup": "Post 5: Beachvolleybanerne<br><i>Indtast næste kode for at fortsætte…</i>"},
-    {"code": "6789", "name": "Post 6", "lat": 55.7137, "lon": 9.989384, "popup": "Post 6: Støvlevasken<br><i>Indtast næste kode for at fortsætte…</i>"},
-    {"code": "7891", "name": "Post 7", "lat": 55.713724, "lon": 9.987689, "popup": "Post 7: Crossfit<br><i>Indtast næste kode for at fortsætte…</i>"},
-    {"code": "8912", "name": "Post 8", "lat": 55.712535, "lon": 9.987702, "popup": "Post 8: Hellebjerg skiltet<br><i>Indtast næste kode for at fortsætte…</i>"}
+    {
+      code: "1234",
+      name: "Post 1",
+      lat: 55.715006,
+      lon: 9.989017,
+      popup: "Post 1: Atletikbanen<br><i>Indtast næste kode for at fortsætte…</i>",
+      mission: {
+        color: "red",
+        title: "Rød mission låst op",
+        people: 4,
+        startOffsetMin: 8,
+        rewardMin: 7
+      }
+    },
+    {
+      code: "2345",
+      name: "Post 2",
+      lat: 55.714184,
+      lon: 9.987867,
+      popup: "Post 2: Bålpladsen<br><i>Indtast næste kode for at fortsætte…</i>",
+      mission: {
+        color: "blue",
+        title: "Blå mission låst op",
+        people: 3,
+        startOffsetMin: 10,
+        rewardMin: 5
+      }
+    },
+    {
+      code: "3456",
+      name: "Post 3",
+      lat: 55.714649,
+      lon: 9.992448,
+      popup: "Post 3: Søen<br><i>Indtast næste kode for at fortsætte…</i>",
+      mission: {
+        color: "green",
+        title: "Grøn mission låst op",
+        people: 2,
+        startOffsetMin: 7,
+        rewardMin: 4
+      }
+    },
+    {
+      code: "4567",
+      name: "Post 4",
+      lat: 55.713184,
+      lon: 9.989702,
+      popup: "Post 4: Rododendron<br><i>Indtast næste kode for at fortsætte…</i>",
+      mission: {
+        color: "red",
+        title: "Rød mission låst op",
+        people: 4,
+        startOffsetMin: 12,
+        rewardMin: 7
+      }
+    },
+    {
+      code: "5678",
+      name: "Post 5",
+      lat: 55.713582,
+      lon: 9.99129,
+      popup: "Post 5: Beachvolleybanerne<br><i>Indtast næste kode for at fortsætte…</i>",
+      mission: {
+        color: "black",
+        title: "Sort risikomission låst op",
+        people: 5,
+        startOffsetMin: 9,
+        rewardMin: 10
+      }
+    },
+    {
+      code: "6789",
+      name: "Post 6",
+      lat: 55.7137,
+      lon: 9.989384,
+      popup: "Post 6: Støvlevasken<br><i>Indtast næste kode for at fortsætte…</i>",
+      mission: {
+        color: "blue",
+        title: "Blå mission låst op",
+        people: 3,
+        startOffsetMin: 8,
+        rewardMin: 6
+      }
+    },
+    {
+      code: "7891",
+      name: "Post 7",
+      lat: 55.713724,
+      lon: 9.987689,
+      popup: "Post 7: Crossfit<br><i>Indtast næste kode for at fortsætte…</i>",
+      mission: {
+        color: "red",
+        title: "Rød mission låst op",
+        people: 4,
+        startOffsetMin: 6,
+        rewardMin: 8
+      }
+    },
+    {
+      code: "8912",
+      name: "Post 8",
+      lat: 55.712535,
+      lon: 9.987702,
+      popup: "Post 8: Hellebjerg skiltet<br><i>Indtast næste kode for at fortsætte…</i>",
+      mission: {
+        color: "black",
+        title: "Sidste mission låst op",
+        people: 6,
+        startOffsetMin: 5,
+        rewardMin: 12
+      }
+    }
   ];
 
   const START_CODE = "Start";
 
-  // Konfiguration (no persistence; reload = fresh game)
   const SHOW_HALO = false;
   const USE_MAX_BOUNDS = false;
   const MAX_BOUNDS = [[55.7115, 9.9855], [55.7165, 9.9945]];
 
-  // ---- TIMER (15:00 start; +4:00 on correct; -0:30 on wrong) ----
-  const START_DURATION_MS = 15 * 60 * 1000;
-  const BONUS_MS = 4 * 60 * 1000;
-  const PENALTY_MS = 30 * 1000;
+  const START_DURATION_MS = 60 * 60 * 1000;
+  const FINAL_PHASE_MS = 10 * 60 * 1000;
 
-  let endAt = null;       // epoch ms when timer ends (not persisted)
-  let timerTick = null;   // setInterval handle
+  const ADJUSTMENT_MS = 30 * 1000;
+  const WRONG_ANSWER_PENALTY_MS = 30 * 1000;
 
-  function mmss(ms){
-    const m = Math.floor(ms / 60000);
-    const s = Math.floor((ms % 60000) / 1000);
-    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-  }
-  function renderTimer(){
-    const box = document.getElementById('timer');
-    if (!box || !endAt) return;
-    const left = Math.max(0, endAt - Date.now());
-    box.textContent = mmss(left);
-    box.style.color = left <= 60000 ? 'var(--err)' : 'var(--ink)';
-    if (left === 0){
-      clearInterval(timerTick); timerTick = null;
-      timeUp();
-    }
-  }
-  function startOrResumeTimer(){
-    const box = document.getElementById('timer');
-    if (!endAt) return;
-    if (box) box.style.display = 'block';
-    if (timerTick) clearInterval(timerTick);
-    renderTimer();
-    timerTick = setInterval(renderTimer, 250);
-  }
-  function adjustTimer(deltaMs){
-    if (!endAt) return;
-    endAt = Math.max(Date.now(), endAt + deltaMs);
-    renderTimer();
-    const box = document.getElementById('timer');
-    if (box){
-      box.classList.add('flash');
-      setTimeout(() => box.classList.remove('flash'), 350);
-    }
-  }
-  function timeUp(){
-    setFeedback("Tiden er udløbet ⏳", false);
-    const f = document.getElementById('kode');
-    const b = document.getElementById('checkBtn');
-    if (f) f.disabled = true;
-    if (b) b.disabled = true;
-  }
+  let adjustableEndAt = null;
+  let fixedEndAt = null;
+  let timerTick = null;
+  let randomMissionTimeout = null;
 
-  let nextIndex = 0; // fresh each load
+  let gameIsFinished = false;
+  let finalPhaseActive = false;
+  let randomMissionHasAppeared = false;
+
+  let nextIndex = 0;
   let gameLayer;
 
-  function leafletMap(){ return window[MAP_ID]; }
+  function leafletMap(){
+    return window[MAP_ID];
+  }
+
+  function mmss(ms){
+    const totalSeconds = Math.ceil(ms / 1000);
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+
+    return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+  }
+
+  function getClockTimeFromNow(minutesFromNow){
+    const d = new Date(Date.now() + minutesFromNow * 60 * 1000);
+
+    return d.toLocaleTimeString("da-DK", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  }
+
+  function currentAdjustmentMs(){
+    return finalPhaseActive ? ADJUSTMENT_MS * 2 : ADJUSTMENT_MS;
+  }
+
+  function currentWrongPenaltyMs(){
+    return finalPhaseActive ? WRONG_ANSWER_PENALTY_MS * 2 : WRONG_ANSWER_PENALTY_MS;
+  }
+
+  function formatReward(rewardMin){
+    return finalPhaseActive ? rewardMin * 2 : rewardMin;
+  }
+
+  function renderTimers(){
+    if (!adjustableEndAt || !fixedEndAt || gameIsFinished) return;
+
+    const now = Date.now();
+
+    const adjustableLeft = Math.max(0, adjustableEndAt - now);
+    const fixedLeft = Math.max(0, fixedEndAt - now);
+
+    const adjustableEl = document.getElementById("adjustableTimer");
+    const fixedEl = document.getElementById("fixedTimer");
+
+    if (!finalPhaseActive && fixedLeft <= FINAL_PHASE_MS && fixedLeft > 0){
+      activateFinalPhase();
+    }
+
+    if (fixedLeft === 0){
+      finishGameByFixedTimer(adjustableLeft);
+      return;
+    }
+
+    if (adjustableEl){
+      adjustableEl.textContent = mmss(adjustableLeft);
+      adjustableEl.style.color = adjustableLeft <= 60000 ? "var(--err)" : "var(--ink)";
+    }
+
+    if (fixedEl){
+      fixedEl.textContent = mmss(fixedLeft);
+      fixedEl.style.color = fixedLeft <= 60000 ? "var(--err)" : "var(--ink)";
+    }
+  }
+
+  function startTimers(){
+    const wrapper = document.getElementById("timer-wrapper");
+
+    gameIsFinished = false;
+    finalPhaseActive = false;
+    randomMissionHasAppeared = false;
+
+    document.body.classList.remove("final-phase");
+
+    adjustableEndAt = Date.now() + START_DURATION_MS;
+    fixedEndAt = Date.now() + START_DURATION_MS;
+
+    if (wrapper){
+      wrapper.style.display = "flex";
+    }
+
+    if (timerTick){
+      clearInterval(timerTick);
+    }
+
+    if (randomMissionTimeout){
+      clearTimeout(randomMissionTimeout);
+    }
+
+    scheduleRandomMissionAroundMiddle();
+
+    updateTimerButtonLabels();
+    renderTimers();
+
+    timerTick = setInterval(renderTimers, 250);
+  }
+
+  function scheduleRandomMissionAroundMiddle(){
+    const minDelay = 25 * 60 * 1000;
+    const maxDelay = 35 * 60 * 1000;
+    const randomDelay = Math.floor(minDelay + Math.random() * (maxDelay - minDelay));
+
+    randomMissionTimeout = setTimeout(() => {
+      if (!gameIsFinished && !randomMissionHasAppeared){
+        showRandomMission();
+      }
+    }, randomDelay);
+  }
+
+  function showRandomMission(){
+    randomMissionHasAppeared = true;
+
+    const popup = document.getElementById("random-mission-popup");
+
+    const mission = {
+      color: "red",
+      title: "Rød mission låst op",
+      people: 4,
+      startOffsetMin: 3,
+      rewardMin: 7
+    };
+
+    const title = document.getElementById("randomMissionTitle");
+    const people = document.getElementById("randomMissionPeople");
+    const start = document.getElementById("randomMissionStart");
+    const reward = document.getElementById("randomMissionReward");
+
+    if (title) title.textContent = mission.title;
+    if (people) people.textContent = `Kræver ${mission.people} personer.`;
+    if (start) start.textContent = `Start kl. ${getClockTimeFromNow(mission.startOffsetMin)}.`;
+    if (reward) reward.textContent = `Belønning: +${formatReward(mission.rewardMin)} minutter.`;
+
+    if (popup){
+      popup.style.display = "grid";
+    }
+
+    addMissionCard(mission);
+    setFeedback("Akut mission låst op! Kig på missionstavlen.", true);
+  }
+
+  function closeRandomMissionPopup(){
+    const popup = document.getElementById("random-mission-popup");
+
+    if (popup){
+      popup.style.display = "none";
+    }
+  }
+
+  function activateFinalPhase(){
+    finalPhaseActive = true;
+
+    document.body.classList.add("final-phase");
+
+    updateTimerButtonLabels();
+
+    const finalMission = {
+      color: "black",
+      title: "Sidste mission er låst op",
+      people: 6,
+      startOffsetMin: 2,
+      rewardMin: 12
+    };
+
+    addMissionCard(finalMission);
+
+    setFeedback("SLUTFASE AKTIVERET! Bonusser tæller dobbelt. Forkerte svar giver dobbelt straf.", true);
+  }
+
+  function updateTimerButtonLabels(){
+    const plus = document.getElementById("plus30Btn");
+    const minus = document.getElementById("minus30Btn");
+
+    if (plus){
+      plus.textContent = finalPhaseActive ? "+60 sek" : "+30 sek";
+    }
+
+    if (minus){
+      minus.textContent = finalPhaseActive ? "-60 sek" : "-30 sek";
+    }
+  }
+
+  function addMissionCard(mission){
+    const board = document.getElementById("mission-board");
+
+    if (!board) return;
+
+    board.style.display = "flex";
+
+    const card = document.createElement("div");
+    card.className = `mission-card ${mission.color || "red"}`;
+
+    const reward = formatReward(mission.rewardMin);
+    const startTime = getClockTimeFromNow(mission.startOffsetMin);
+
+    card.innerHTML = `
+      <h3>${mission.title}</h3>
+      <p>Kræver ${mission.people} personer.</p>
+      <p>Start kl. ${startTime}.</p>
+      <p>Belønning: +${reward} minutter${finalPhaseActive ? " — slutfase x2" : ""}.</p>
+    `;
+
+    board.prepend(card);
+  }
+
+  function adjustAdjustableTimer(deltaMs){
+    if (!adjustableEndAt || gameIsFinished) return;
+
+    adjustableEndAt = Math.max(Date.now(), adjustableEndAt + deltaMs);
+
+    renderTimers();
+
+    const box = document.getElementById("adjustableTimerBox");
+
+    if (box){
+      box.classList.add("flash");
+      setTimeout(() => box.classList.remove("flash"), 350);
+    }
+  }
+
+  function applyWrongAnswerPenalty(){
+    const penalty = currentWrongPenaltyMs();
+
+    adjustAdjustableTimer(-penalty);
+
+    if (finalPhaseActive){
+      setFeedback("Forkert kode – dobbelt straf i slutfasen: -60 sek.", false);
+    } else {
+      setFeedback("Forkert kode – prøv igen. Straf: -30 sek.", false);
+    }
+  }
+
+  function finishGameByFixedTimer(scoreMs){
+    gameIsFinished = true;
+
+    if (timerTick){
+      clearInterval(timerTick);
+      timerTick = null;
+    }
+
+    if (randomMissionTimeout){
+      clearTimeout(randomMissionTimeout);
+      randomMissionTimeout = null;
+    }
+
+    const scoreText = mmss(scoreMs);
+
+    const adjustableEl = document.getElementById("adjustableTimer");
+    const fixedEl = document.getElementById("fixedTimer");
+
+    if (adjustableEl){
+      adjustableEl.textContent = scoreText;
+      adjustableEl.style.color = "var(--ok)";
+    }
+
+    if (fixedEl){
+      fixedEl.textContent = "00:00";
+      fixedEl.style.color = "var(--err)";
+    }
+
+    document.body.classList.remove("final-phase");
+
+    setFeedback(`Tiden er slut. Jeres score er ${scoreText} ⏱️`, true);
+
+    const f = document.getElementById("kode");
+    const b = document.getElementById("checkBtn");
+    const plus = document.getElementById("plus30Btn");
+    const minus = document.getElementById("minus30Btn");
+
+    if (f) f.disabled = true;
+    if (b) b.disabled = true;
+    if (plus) plus.disabled = true;
+    if (minus) minus.disabled = true;
+  }
 
   function makeDivIcon(){
     return L.divIcon({
-      className: 'pulse-marker',
+      className: "pulse-marker",
       html: "<div class='pin'></div><div class='pulse'></div>",
-      iconSize: [24,24], iconAnchor: [12,12]
+      iconSize: [24,24],
+      iconAnchor: [12,12]
     });
   }
 
   function updateProgress(){
-    const pct = Math.min(100, Math.round((nextIndex/POSTS.length)*100));
+    const pct = Math.min(100, Math.round((nextIndex / POSTS.length) * 100));
     const bar = document.getElementById("progressBar");
-    if (bar) bar.style.width = pct + "%";
+
+    if (bar){
+      bar.style.width = pct + "%";
+    }
   }
 
   function showPost(p){
     L.marker([p.lat, p.lon], { icon: makeDivIcon() })
-      .addTo(gameLayer).bindPopup(p.popup).openPopup();
+      .addTo(gameLayer)
+      .bindPopup(p.popup)
+      .openPopup();
+
     if (SHOW_HALO){
-      L.circle([p.lat, p.lon], {radius: 35, color: '#1f7ae0', weight: 2, fillOpacity: 0.08}).addTo(gameLayer);
+      L.circle([p.lat, p.lon], {
+        radius: 35,
+        color: "#1f7ae0",
+        weight: 2,
+        fillOpacity: 0.08
+      }).addTo(gameLayer);
     }
+
     leafletMap().setView([p.lat, p.lon], 18, { animate:true });
   }
 
   function setFeedback(msg, ok=false){
     const el = document.getElementById("feedback");
+
     if (!el) return;
-    el.innerHTML = `<span style="color:${ok ? 'var(--ok)' : 'var(--err)'}">${msg}</span>`;
-    if (navigator.vibrate) navigator.vibrate(ok ? [60,40,60] : 120);
+
+    el.innerHTML = `<span style="color:${ok ? "var(--ok)" : "var(--err)"}">${msg}</span>`;
+
+    if (navigator.vibrate){
+      navigator.vibrate(ok ? [60,40,60] : 120);
+    }
   }
 
   function autoFocusMobile(el){
     if (!el) return;
+
     const tryFocus = () => {
       el.focus({ preventScroll: true });
-      if (el.setSelectionRange) {
+
+      if (el.setSelectionRange){
         const len = el.value.length;
         el.setSelectionRange(len, len);
       }
     };
+
     requestAnimationFrame(tryFocus);
     setTimeout(tryFocus, 180);
     setTimeout(tryFocus, 400);
   }
 
-  // Simpel debounce på tjek
   let lastCheck = 0;
+
   async function checkKode(){
+    if (gameIsFinished) return;
+
     const now = Date.now();
+
     if (now - lastCheck < 250) return;
+
     lastCheck = now;
 
-    const field = document.getElementById('kode');
-    const kode = (field.value || '').trim();
-    if (!leafletMap()) return setFeedback("Kort ikke klar – prøv igen om et øjeblik…");
+    const field = document.getElementById("kode");
+    const kode = (field.value || "").trim();
 
-    // rækkefølgelås
+    if (!leafletMap()){
+      return setFeedback("Kort ikke klar – prøv igen om et øjeblik…");
+    }
+
     const expected = POSTS[nextIndex];
+
     if (!expected || kode !== expected.code){
-      setFeedback("Forkert kode – prøv igen.");
-      field.setAttribute('aria-invalid', 'true');
+      field.setAttribute("aria-invalid", "true");
       field.select();
-      adjustTimer(-PENALTY_MS);   // -30s on wrong
+
+      applyWrongAnswerPenalty();
+
       return;
     }
 
-    field.removeAttribute('aria-invalid');
+    field.removeAttribute("aria-invalid");
+
     showPost(expected);
+
+    if (expected.mission){
+      addMissionCard(expected.mission);
+    }
+
     nextIndex = Math.min(nextIndex + 1, POSTS.length);
+
     updateProgress();
-    adjustTimer(BONUS_MS);         // +4:00 on correct
+
     setFeedback(`${expected.name} låst op ✅`, true);
+
     field.value = "";
 
     if (nextIndex === POSTS.length){
@@ -318,144 +1149,211 @@
 
   function init(){
     const map = leafletMap();
-    if (!map){ return setTimeout(init, 200); }
+
+    if (!map){
+      return setTimeout(init, 200);
+    }
+
     gameLayer = L.layerGroup().addTo(map);
 
-    // Pro-touch
     map.scrollWheelZoom.disable();
-    if (USE_MAX_BOUNDS && Array.isArray(MAX_BOUNDS)) map.setMaxBounds(MAX_BOUNDS);
+
+    if (USE_MAX_BOUNDS && Array.isArray(MAX_BOUNDS)){
+      map.setMaxBounds(MAX_BOUNDS);
+    }
 
     updateProgress();
 
-    const input = document.getElementById('kode');
-    const gate = document.getElementById('start-gate');
-    if (gate && gate.style.display === 'none') autoFocusMobile(input);
+    const input = document.getElementById("kode");
+    const gate = document.getElementById("start-gate");
+
+    if (gate && gate.style.display === "none"){
+      autoFocusMobile(input);
+    }
   }
 
-  // Start-gate (always fresh start on page load)
   function initGate(){
-    const btn = document.getElementById('startBtn');
-    const inp = document.getElementById('startCode');
-    const msg = document.getElementById('startMsg');
+    const btn = document.getElementById("startBtn");
+    const inp = document.getElementById("startCode");
+    const msg = document.getElementById("startMsg");
 
     autoFocusMobile(inp);
 
     function openIfValid(){
       if ((inp.value || "").trim() === START_CODE){
-        document.getElementById('start-gate').style.display = 'none';
-        // Fresh start every time
+        document.getElementById("start-gate").style.display = "none";
+
         nextIndex = 0;
-        if (gameLayer) gameLayer.clearLayers();
+        gameIsFinished = false;
+        finalPhaseActive = false;
+        randomMissionHasAppeared = false;
+
+        document.body.classList.remove("final-phase");
+
+        const missionBoard = document.getElementById("mission-board");
+
+        if (missionBoard){
+          missionBoard.innerHTML = "";
+          missionBoard.style.display = "none";
+        }
+
+        const kodeInput = document.getElementById("kode");
+        const checkButton = document.getElementById("checkBtn");
+        const plus = document.getElementById("plus30Btn");
+        const minus = document.getElementById("minus30Btn");
+
+        if (kodeInput) kodeInput.disabled = false;
+        if (checkButton) checkButton.disabled = false;
+        if (plus) plus.disabled = false;
+        if (minus) minus.disabled = false;
+
+        if (gameLayer){
+          gameLayer.clearLayers();
+        }
+
         updateProgress();
-        endAt = Date.now() + START_DURATION_MS;
-        startOrResumeTimer();
-        autoFocusMobile(document.getElementById('kode'));
+
+        startTimers();
+
+        autoFocusMobile(document.getElementById("kode"));
       } else {
         msg.textContent = "Forkert startkode.";
         autoFocusMobile(inp);
       }
     }
-    btn.addEventListener('click', openIfValid);
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') openIfValid(); });
-    document.getElementById('start-gate').addEventListener('touchstart', () => autoFocusMobile(inp));
+
+    btn.addEventListener("click", openIfValid);
+
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter"){
+        openIfValid();
+      }
+    });
+
+    document.getElementById("start-gate").addEventListener("touchstart", () => autoFocusMobile(inp));
   }
 
-  // Event binding
-  document.addEventListener('DOMContentLoaded', () => {
-    const checkBtn = document.getElementById('checkBtn');
-    const kode = document.getElementById('kode');
+  document.addEventListener("DOMContentLoaded", () => {
+    const checkBtn = document.getElementById("checkBtn");
+    const kode = document.getElementById("kode");
 
-    if (checkBtn) checkBtn.addEventListener('click', checkKode);
-    if (kode) kode.addEventListener('keydown', e => {
-      if (e.key === 'Enter'){ e.preventDefault(); checkKode(); }
-    });
+    const plus30Btn = document.getElementById("plus30Btn");
+    const minus30Btn = document.getElementById("minus30Btn");
+    const closeRandomMissionBtn = document.getElementById("closeRandomMissionBtn");
+
+    if (checkBtn){
+      checkBtn.addEventListener("click", checkKode);
+    }
+
+    if (kode){
+      kode.addEventListener("keydown", e => {
+        if (e.key === "Enter"){
+          e.preventDefault();
+          checkKode();
+        }
+      });
+    }
+
+    if (plus30Btn){
+      plus30Btn.addEventListener("click", () => adjustAdjustableTimer(currentAdjustmentMs()));
+    }
+
+    if (minus30Btn){
+      minus30Btn.addEventListener("click", () => adjustAdjustableTimer(-currentAdjustmentMs()));
+    }
+
+    if (closeRandomMissionBtn){
+      closeRandomMissionBtn.addEventListener("click", closeRandomMissionPopup);
+    }
 
     initGate();
     init();
   });
 </script>
 
-            <div class="folium-map" id="map_7b78e732d0bc3efcd9d57fcf33eec995" ></div>
+<div class="folium-map" id="map_7b78e732d0bc3efcd9d57fcf33eec995"></div>
 
 </body>
+
 <script>
+    var map_7b78e732d0bc3efcd9d57fcf33eec995 = L.map(
+        "map_7b78e732d0bc3efcd9d57fcf33eec995",
+        {
+            center: [55.713987, 9.988917],
+            crs: L.CRS.EPSG3857,
+            ...{
+                "zoom": 17,
+                "zoomControl": true,
+                "preferCanvas": false,
+            }
+        }
+    );
 
+    L.control.scale().addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
 
-            var map_7b78e732d0bc3efcd9d57fcf33eec995 = L.map(
-                "map_7b78e732d0bc3efcd9d57fcf33eec995",
-                {
-                    center: [55.713987, 9.988917],
-                    crs: L.CRS.EPSG3857,
-                    ...{
-  "zoom": 17,
-  "zoomControl": true,
-  "preferCanvas": false,
-}
+    var tile_layer_c04335efb148a20b67a2e638655cbf4e = L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+        {
+            "minZoom": 0,
+            "maxZoom": 20,
+            "maxNativeZoom": 20,
+            "noWrap": false,
+            "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors &copy; <a href=\"https://carto.com/attributions\">CARTO</a>",
+            "subdomains": "abcd",
+            "detectRetina": false,
+            "tms": false,
+            "opacity": 1,
+        }
+    );
 
-                }
-            );
-            L.control.scale().addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
+    tile_layer_c04335efb148a20b67a2e638655cbf4e.addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
 
+    L.control.fullscreen(
+        {
+            "position": "topleft",
+            "title": "Full Screen",
+            "titleCancel": "Exit Full Screen",
+            "forceSeparateButton": false,
+        }
+    ).addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
 
+    var tile_layer_0c1008b38f448935c3a7affcb0150acf = L.tileLayer(
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors",
+            "detect_retina": false,
+            "max_native_zoom": 19,
+            "max_zoom": 19,
+            "min_zoom": 0,
+            "no_wrap": false,
+            "opacity": 1,
+            "subdomains": "abc",
+            "tms": false
+        }
+    );
 
+    var mini_map_8eac6467b99721dbd2a072d5acd486e5 = new L.Control.MiniMap(
+        tile_layer_0c1008b38f448935c3a7affcb0150acf,
+        {
+            "position": "bottomright",
+            "width": 150,
+            "height": 150,
+            "collapsedWidth": 25,
+            "collapsedHeight": 25,
+            "zoomLevelOffset": -5,
+            "centerFixed": false,
+            "zoomAnimation": false,
+            "toggleDisplay": true,
+            "autoToggleDisplay": false,
+            "minimized": false,
+        }
+    );
 
-            var tile_layer_c04335efb148a20b67a2e638655cbf4e = L.tileLayer(
-                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-                {
-  "minZoom": 0,
-  "maxZoom": 20,
-  "maxNativeZoom": 20,
-  "noWrap": false,
-  "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors &copy; <a href=\"https://carto.com/attributions\">CARTO</a>",
-  "subdomains": "abcd",
-  "detectRetina": false,
-  "tms": false,
-  "opacity": 1,
-}
+    map_7b78e732d0bc3efcd9d57fcf33eec995.addControl(mini_map_8eac6467b99721dbd2a072d5acd486e5);
 
-            );
-
-
-            tile_layer_c04335efb148a20b67a2e638655cbf4e.addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
-
-
-            L.control.fullscreen(
-                {
-  "position": "topleft",
-  "title": "Full Screen",
-  "titleCancel": "Exit Full Screen",
-  "forceSeparateButton": false,
-}
-            ).addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
-
-
-            var tile_layer_0c1008b38f448935c3a7affcb0150acf = L.tileLayer(
-                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                {"attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors", "detect_retina": false, "max_native_zoom": 19, "max_zoom": 19, "min_zoom": 0, "no_wrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
-            );
-            var mini_map_8eac6467b99721dbd2a072d5acd486e5 = new L.Control.MiniMap(
-                tile_layer_0c1008b38f448935c3a7affcb0150acf,
-                {
-  "position": "bottomright",
-  "width": 150,
-  "height": 150,
-  "collapsedWidth": 25,
-  "collapsedHeight": 25,
-  "zoomLevelOffset": -5,
-  "centerFixed": false,
-  "zoomAnimation": false,
-  "toggleDisplay": true,
-  "autoToggleDisplay": false,
-  "minimized": false,
-}
-            );
-            map_7b78e732d0bc3efcd9d57fcf33eec995.addControl(mini_map_8eac6467b99721dbd2a072d5acd486e5);
-
-
-            var locate_control_7069e530d41a511f4d043dc38f29ce0b = L.control.locate(
-                {"flyTo": true}
-            ).addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
-
-
+    var locate_control_7069e530d41a511f4d043dc38f29ce0b = L.control.locate(
+        {"flyTo": true}
+    ).addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
 </script>
+
 </html>
