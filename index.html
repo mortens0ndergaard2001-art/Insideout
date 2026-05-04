@@ -349,9 +349,29 @@
     font-weight:700;
   }
 
-  body.final-phase #phase-banner{
+  body.final-phase:not(.phase-banner-closed) #phase-banner{
     display:block;
     animation:bannerPulse 1.2s ease-in-out infinite alternate;
+  }
+
+  #closePhaseBannerBtn{
+    position:absolute;
+    top:10px;
+    right:12px;
+    width:34px;
+    height:34px;
+    border:0;
+    border-radius:999px;
+    background:rgba(255,255,255,.16);
+    color:white;
+    font-size:26px;
+    line-height:1;
+    font-weight:900;
+    cursor:pointer;
+  }
+
+  #closePhaseBannerBtn:hover{
+    background:rgba(255,255,255,.28);
   }
 
   @keyframes bannerPulse{
@@ -364,7 +384,7 @@
     }
   }
 
-  #mission-board{
+  #mission-board-shell{
     position:fixed;
     left:12px;
     bottom:12px;
@@ -372,9 +392,45 @@
     width:min(360px,92vw);
     display:none;
     flex-direction:column;
+    gap:8px;
+  }
+
+  #missionToggleBtn{
+    width:100%;
+    border:0;
+    border-radius:14px;
+    padding:10px 14px;
+    background:rgba(10,10,10,.92);
+    color:white;
+    font-weight:1000;
+    box-shadow:0 8px 28px rgba(0,0,0,.22);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
+  }
+
+  #missionCount{
+    display:inline-grid;
+    place-items:center;
+    min-width:28px;
+    height:28px;
+    border-radius:999px;
+    background:var(--brand);
+    color:white;
+    font-weight:1000;
+  }
+
+  #mission-board{
+    display:flex;
+    flex-direction:column;
     gap:10px;
     max-height:55vh;
     overflow:auto;
+  }
+
+  #mission-board-shell.collapsed #mission-board{
+    display:none;
   }
 
   .mission-card{
@@ -520,9 +576,12 @@
       font-size:14px;
     }
 
-    #mission-board{
+    #mission-board-shell{
       bottom:120px;
       width:calc(100vw - 24px);
+    }
+
+    #mission-board{
       max-height:38vh;
     }
   }
@@ -593,13 +652,22 @@
 <div id="dramatic-overlay"></div>
 
 <div id="phase-banner">
+  <button id="closePhaseBannerBtn" type="button" aria-label="Luk slutfase-besked">×</button>
+
   <h1>Slutfase aktiveret</h1>
   <p>Alle bonusser tæller dobbelt.</p>
   <p>Forkerte svar giver dobbelt straf.</p>
   <p>Sidste mission er låst op.</p>
 </div>
 
-<div id="mission-board"></div>
+<div id="mission-board-shell">
+  <button id="missionToggleBtn" type="button">
+    <span id="missionToggleText">Skjul missioner</span>
+    <span id="missionCount">0</span>
+  </button>
+
+  <div id="mission-board"></div>
+</div>
 
 <div id="random-mission-popup">
   <div class="random-mission-card">
@@ -624,13 +692,7 @@
       lat: 55.715006,
       lon: 9.989017,
       popup: "Post 1: Atletikbanen<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: {
-        color: "red",
-        title: "Rød mission låst op",
-        people: 4,
-        startOffsetMin: 8,
-        rewardMin: 7
-      }
+      mission: { color: "red", title: "Rød mission låst op", people: 4, startOffsetMin: 8, rewardMin: 7 }
     },
     {
       code: "2345",
@@ -638,13 +700,7 @@
       lat: 55.714184,
       lon: 9.987867,
       popup: "Post 2: Bålpladsen<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: {
-        color: "blue",
-        title: "Blå mission låst op",
-        people: 3,
-        startOffsetMin: 10,
-        rewardMin: 5
-      }
+      mission: { color: "blue", title: "Blå mission låst op", people: 3, startOffsetMin: 10, rewardMin: 5 }
     },
     {
       code: "3456",
@@ -652,13 +708,7 @@
       lat: 55.714649,
       lon: 9.992448,
       popup: "Post 3: Søen<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: {
-        color: "green",
-        title: "Grøn mission låst op",
-        people: 2,
-        startOffsetMin: 7,
-        rewardMin: 4
-      }
+      mission: { color: "green", title: "Grøn mission låst op", people: 2, startOffsetMin: 7, rewardMin: 4 }
     },
     {
       code: "4567",
@@ -666,13 +716,7 @@
       lat: 55.713184,
       lon: 9.989702,
       popup: "Post 4: Rododendron<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: {
-        color: "red",
-        title: "Rød mission låst op",
-        people: 4,
-        startOffsetMin: 12,
-        rewardMin: 7
-      }
+      mission: { color: "red", title: "Rød mission låst op", people: 4, startOffsetMin: 12, rewardMin: 7 }
     },
     {
       code: "5678",
@@ -680,13 +724,7 @@
       lat: 55.713582,
       lon: 9.99129,
       popup: "Post 5: Beachvolleybanerne<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: {
-        color: "black",
-        title: "Sort risikomission låst op",
-        people: 5,
-        startOffsetMin: 9,
-        rewardMin: 10
-      }
+      mission: { color: "black", title: "Sort risikomission låst op", people: 5, startOffsetMin: 9, rewardMin: 10 }
     },
     {
       code: "6789",
@@ -694,13 +732,7 @@
       lat: 55.7137,
       lon: 9.989384,
       popup: "Post 6: Støvlevasken<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: {
-        color: "blue",
-        title: "Blå mission låst op",
-        people: 3,
-        startOffsetMin: 8,
-        rewardMin: 6
-      }
+      mission: { color: "blue", title: "Blå mission låst op", people: 3, startOffsetMin: 8, rewardMin: 6 }
     },
     {
       code: "7891",
@@ -708,13 +740,7 @@
       lat: 55.713724,
       lon: 9.987689,
       popup: "Post 7: Crossfit<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: {
-        color: "red",
-        title: "Rød mission låst op",
-        people: 4,
-        startOffsetMin: 6,
-        rewardMin: 8
-      }
+      mission: { color: "red", title: "Rød mission låst op", people: 4, startOffsetMin: 6, rewardMin: 8 }
     },
     {
       code: "8912",
@@ -722,13 +748,7 @@
       lat: 55.712535,
       lon: 9.987702,
       popup: "Post 8: Hellebjerg skiltet<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: {
-        color: "black",
-        title: "Sidste mission låst op",
-        people: 6,
-        startOffsetMin: 5,
-        rewardMin: 12
-      }
+      mission: { color: "black", title: "Sidste mission låst op", people: 6, startOffsetMin: 5, rewardMin: 12 }
     }
   ];
 
@@ -828,6 +848,7 @@
     randomMissionHasAppeared = false;
 
     document.body.classList.remove("final-phase");
+    document.body.classList.remove("phase-banner-closed");
 
     adjustableEndAt = Date.now() + START_DURATION_MS;
     fixedEndAt = Date.now() + START_DURATION_MS;
@@ -907,6 +928,7 @@
     finalPhaseActive = true;
 
     document.body.classList.add("final-phase");
+    document.body.classList.remove("phase-banner-closed");
 
     updateTimerButtonLabels();
 
@@ -923,6 +945,10 @@
     setFeedback("SLUTFASE AKTIVERET! Bonusser tæller dobbelt. Forkerte svar giver dobbelt straf.", true);
   }
 
+  function closePhaseBanner(){
+    document.body.classList.add("phase-banner-closed");
+  }
+
   function updateTimerButtonLabels(){
     const plus = document.getElementById("plus30Btn");
     const minus = document.getElementById("minus30Btn");
@@ -937,11 +963,12 @@
   }
 
   function addMissionCard(mission){
+    const shell = document.getElementById("mission-board-shell");
     const board = document.getElementById("mission-board");
 
-    if (!board) return;
+    if (!shell || !board) return;
 
-    board.style.display = "flex";
+    shell.style.display = "flex";
 
     const card = document.createElement("div");
     card.className = `mission-card ${mission.color || "red"}`;
@@ -957,6 +984,32 @@
     `;
 
     board.prepend(card);
+
+    updateMissionCount();
+  }
+
+  function updateMissionCount(){
+    const board = document.getElementById("mission-board");
+    const count = document.getElementById("missionCount");
+
+    if (!board || !count) return;
+
+    count.textContent = board.children.length;
+  }
+
+  function toggleMissionBoard(){
+    const shell = document.getElementById("mission-board-shell");
+    const text = document.getElementById("missionToggleText");
+
+    if (!shell || !text) return;
+
+    shell.classList.toggle("collapsed");
+
+    if (shell.classList.contains("collapsed")){
+      text.textContent = "Vis missioner";
+    } else {
+      text.textContent = "Skjul missioner";
+    }
   }
 
   function adjustAdjustableTimer(deltaMs){
@@ -1189,13 +1242,26 @@
         randomMissionHasAppeared = false;
 
         document.body.classList.remove("final-phase");
+        document.body.classList.remove("phase-banner-closed");
 
+        const missionShell = document.getElementById("mission-board-shell");
         const missionBoard = document.getElementById("mission-board");
+        const missionToggleText = document.getElementById("missionToggleText");
 
         if (missionBoard){
           missionBoard.innerHTML = "";
-          missionBoard.style.display = "none";
         }
+
+        if (missionShell){
+          missionShell.style.display = "none";
+          missionShell.classList.remove("collapsed");
+        }
+
+        if (missionToggleText){
+          missionToggleText.textContent = "Skjul missioner";
+        }
+
+        updateMissionCount();
 
         const kodeInput = document.getElementById("kode");
         const checkButton = document.getElementById("checkBtn");
@@ -1240,6 +1306,8 @@
     const plus30Btn = document.getElementById("plus30Btn");
     const minus30Btn = document.getElementById("minus30Btn");
     const closeRandomMissionBtn = document.getElementById("closeRandomMissionBtn");
+    const closePhaseBannerBtn = document.getElementById("closePhaseBannerBtn");
+    const missionToggleBtn = document.getElementById("missionToggleBtn");
 
     if (checkBtn){
       checkBtn.addEventListener("click", checkKode);
@@ -1266,6 +1334,14 @@
       closeRandomMissionBtn.addEventListener("click", closeRandomMissionPopup);
     }
 
+    if (closePhaseBannerBtn){
+      closePhaseBannerBtn.addEventListener("click", closePhaseBanner);
+    }
+
+    if (missionToggleBtn){
+      missionToggleBtn.addEventListener("click", toggleMissionBoard);
+    }
+
     initGate();
     init();
   });
@@ -1281,78 +1357,74 @@
         {
             center: [55.713987, 9.988917],
             crs: L.CRS.EPSG3857,
-            ...{
-                "zoom": 17,
-                "zoomControl": true,
-                "preferCanvas": false,
-            }
+            zoom: 17,
+            zoomControl: true,
+            preferCanvas: false
         }
     );
 
     L.control.scale().addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
 
-    var tile_layer_c04335efb148a20b67a2e638655cbf4e = L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    var satelliteLayer = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         {
-            "minZoom": 0,
-            "maxZoom": 20,
-            "maxNativeZoom": 20,
-            "noWrap": false,
-            "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors &copy; <a href=\"https://carto.com/attributions\">CARTO</a>",
-            "subdomains": "abcd",
-            "detectRetina": false,
-            "tms": false,
-            "opacity": 1,
+            attribution: 'Tiles &copy; Esri',
+            maxZoom: 20
         }
     );
 
-    tile_layer_c04335efb148a20b67a2e638655cbf4e.addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
+    var labelsLayer = L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png",
+        {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+            subdomains: "abcd",
+            maxZoom: 20
+        }
+    );
+
+    satelliteLayer.addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
+    labelsLayer.addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
 
     L.control.fullscreen(
         {
-            "position": "topleft",
-            "title": "Full Screen",
-            "titleCancel": "Exit Full Screen",
-            "forceSeparateButton": false,
+            position: "topleft",
+            title: "Full Screen",
+            titleCancel: "Exit Full Screen",
+            forceSeparateButton: false
         }
     ).addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
 
-    var tile_layer_0c1008b38f448935c3a7affcb0150acf = L.tileLayer(
+    var miniMapLayer = L.tileLayer(
         "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
-            "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors",
-            "detect_retina": false,
-            "max_native_zoom": 19,
-            "max_zoom": 19,
-            "min_zoom": 0,
-            "no_wrap": false,
-            "opacity": 1,
-            "subdomains": "abc",
-            "tms": false
+            attribution: "&copy; OpenStreetMap contributors",
+            maxZoom: 19
         }
     );
 
     var mini_map_8eac6467b99721dbd2a072d5acd486e5 = new L.Control.MiniMap(
-        tile_layer_0c1008b38f448935c3a7affcb0150acf,
+        miniMapLayer,
         {
-            "position": "bottomright",
-            "width": 150,
-            "height": 150,
-            "collapsedWidth": 25,
-            "collapsedHeight": 25,
-            "zoomLevelOffset": -5,
-            "centerFixed": false,
-            "zoomAnimation": false,
-            "toggleDisplay": true,
-            "autoToggleDisplay": false,
-            "minimized": false,
+            position: "bottomright",
+            width: 150,
+            height: 150,
+            collapsedWidth: 25,
+            collapsedHeight: 25,
+            zoomLevelOffset: -5,
+            centerFixed: false,
+            zoomAnimation: false,
+            toggleDisplay: true,
+            autoToggleDisplay: false,
+            minimized: false
         }
     );
 
     map_7b78e732d0bc3efcd9d57fcf33eec995.addControl(mini_map_8eac6467b99721dbd2a072d5acd486e5);
 
     var locate_control_7069e530d41a511f4d043dc38f29ce0b = L.control.locate(
-        {"flyTo": true}
+        {
+            flyTo: true
+        }
     ).addTo(map_7b78e732d0bc3efcd9d57fcf33eec995);
 </script>
 
