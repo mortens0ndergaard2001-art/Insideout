@@ -491,50 +491,88 @@
     }
   }
 
-  #random-mission-popup{
+
+
+  #activity-status-shell{
     position:fixed;
-    inset:0;
-    z-index:10003;
+    right:12px;
+    top:130px;
+    z-index:10001;
+    width:min(300px,92vw);
     display:none;
-    place-items:center;
-    background:rgba(0,0,0,.55);
+    flex-direction:column;
+    gap:8px;
   }
 
-  .random-mission-card{
-    width:min(560px,92vw);
+  #activityStatusToggleBtn{
+    width:100%;
+    border:0;
+    border-radius:14px;
+    padding:10px 14px;
+    background:rgba(10,10,10,.92);
+    color:white;
+    font-weight:1000;
+    box-shadow:0 8px 28px rgba(0,0,0,.22);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
+  }
+
+  #activityStatusBadge{
+    display:inline-grid;
+    place-items:center;
+    min-width:28px;
+    height:28px;
+    border-radius:999px;
+    background:var(--brand);
+    color:white;
+    font-weight:1000;
+  }
+
+  #activity-status-card{
     background:var(--bg);
     color:var(--ink);
-    border-radius:22px;
-    padding:26px;
-    box-shadow:0 18px 60px rgba(0,0,0,.45);
-    border:3px solid #c62828;
-    text-align:center;
+    border-radius:16px;
+    padding:14px 16px;
+    box-shadow:0 8px 28px rgba(0,0,0,.22);
+    border-left:10px solid var(--brand);
+    backdrop-filter:blur(8px);
     animation:missionPop .35s ease;
   }
 
-  .random-mission-card h2{
-    margin:0 0 12px;
-    font-size:30px;
-    font-weight:1000;
-    color:#c62828;
-    text-transform:uppercase;
+  #activity-status-card.status-flash{
+    animation:statusFlash .7s ease;
   }
 
-  .random-mission-card p{
+  #activity-status-card h3{
+    margin:0 0 8px;
     font-size:18px;
-    font-weight:700;
-    margin:8px 0;
+    font-weight:1000;
   }
 
-  .random-mission-card button{
-    margin-top:18px;
-    border:0;
-    border-radius:12px;
-    padding:12px 18px;
-    background:var(--brand);
-    color:white;
+  #activity-status-card p{
+    margin:6px 0;
+    font-size:16px;
     font-weight:900;
-    cursor:pointer;
+  }
+
+  #activity-status-card .open{
+    color:var(--ok);
+  }
+
+  #activity-status-card .closed{
+    color:var(--err);
+  }
+
+  #activity-status-shell.collapsed #activity-status-card{
+    display:none;
+  }
+
+  @keyframes statusFlash{
+    0%{ transform:scale(1); }
+    35%{ transform:scale(1.06); }
+    100%{ transform:scale(1); }
   }
 
   @media (max-width:700px){
@@ -584,6 +622,15 @@
     #mission-board{
       max-height:38vh;
     }
+
+    #activity-status-shell{
+      top:auto;
+      right:12px;
+      left:12px;
+      bottom:86px;
+      width:calc(100vw - 24px);
+    }
+
   }
 </style>
 
@@ -654,10 +701,22 @@
 <div id="phase-banner">
   <button id="closePhaseBannerBtn" type="button" aria-label="Luk slutfase-besked">×</button>
 
-  <h1>Slutfase aktiveret</h1>
-  <p>Alle bonusser tæller dobbelt.</p>
-  <p>Forkerte svar giver dobbelt straf.</p>
-  <p>Sidste mission er låst op.</p>
+  <h1>Slutfase - 10 minutter tilbage</h1>
+</div>
+
+
+
+<div id="activity-status-shell">
+  <button id="activityStatusToggleBtn" type="button">
+    <span id="activityStatusToggleText">Skjul status</span>
+    <span id="activityStatusBadge">!</span>
+  </button>
+
+  <div id="activity-status-card">
+    <h3>Status</h3>
+    <p id="tidsbodStatus">Tidsbod (Foredragssal): Åben</p>
+    <p id="duelStatus">Dueller (Hallen): Lukket</p>
+  </div>
 </div>
 
 <div id="mission-board-shell">
@@ -669,90 +728,166 @@
   <div id="mission-board"></div>
 </div>
 
-<div id="random-mission-popup">
-  <div class="random-mission-card">
-    <h2>Akut mission!</h2>
-    <p id="randomMissionTitle">Mission låst op</p>
-    <p id="randomMissionPeople">Kræver 4 personer.</p>
-    <p id="randomMissionStart">Start nu.</p>
-    <p id="randomMissionReward">Belønning: +7 minutter.</p>
-    <button id="closeRandomMissionBtn" type="button">Forstået</button>
-  </div>
-</div>
 
 <script>
   "use strict";
 
   const MAP_ID = "map_7b78e732d0bc3efcd9d57fcf33eec995";
 
-  const POSTS = [
+  // HER RETTER DU MISSIONER/POSTER
+  // code = koden der låser missionen op
+  // name = navnet på missionen/posten; vises både på kortet og i missionsarket
+  // lat/lon = koordinaterne for markøren på kortet
+  // people = antal personer der skal bruges
+  // solveAt = fast tid på den faste timer, hvor missionen skal løses. Første mission er 56:00 = 4 min inde i løbet.
+  // rewardsMin = minutter til 1., 2. og 3. plads. Øvrige får 0 minutter.
+  const MISSIONS = [
     {
-      code: "1234",
-      name: "Post 1",
+      code: "En terning",
+      name: "Kontorstolsræs",
       lat: 55.715006,
       lon: 9.989017,
-      popup: "Post 1: Atletikbanen<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: { color: "red", title: "Rød mission låst op", people: 4, startOffsetMin: 8, rewardMin: 7 }
+      people: 2,
+      solveAt: "56:00",
+      rewardsMin: { first: 7, second: 5, third: 3 }
     },
     {
-      code: "2345",
-      name: "Post 2",
-      lat: 55.714184,
-      lon: 9.987867,
-      popup: "Post 2: Bålpladsen<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: { color: "blue", title: "Blå mission låst op", people: 3, startOffsetMin: 10, rewardMin: 5 }
+      code: "Han er skaldet",
+      name: "Slikkepinden",
+      lat: 55.713473,
+      lon: 9.990473,
+      people: 1,
+      solveAt: "54:00",
+      rewardsMin: { first: 5, second: 3, third: 1 }
     },
     {
-      code: "3456",
-      name: "Post 3",
-      lat: 55.714649,
-      lon: 9.992448,
-      popup: "Post 3: Søen<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: { color: "green", title: "Grøn mission låst op", people: 2, startOffsetMin: 7, rewardMin: 4 }
+      code: "95",
+      name: "Gravmaskinen",
+      lat: 55.713595,
+      lon: 9.991279,
+      people: 4,
+      solveAt: "50:00",
+      rewardsMin: { first: 11, second: 9, third: 7 }
     },
     {
-      code: "4567",
-      name: "Post 4",
-      lat: 55.713184,
-      lon: 9.989702,
-      popup: "Post 4: Rododendron<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: { color: "red", title: "Rød mission låst op", people: 4, startOffsetMin: 12, rewardMin: 7 }
+      code: "140 og 60",
+      name: "Sidste skoledag?",
+      lat: 55.712549,
+      lon: 9.987576,
+      people: 2,
+      solveAt: "46:00",
+      rewardsMin: { first: 7, second: 5, third: 3 }
     },
     {
-      code: "5678",
-      name: "Post 5",
-      lat: 55.713582,
-      lon: 9.99129,
-      popup: "Post 5: Beachvolleybanerne<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: { color: "black", title: "Sort risikomission låst op", people: 5, startOffsetMin: 9, rewardMin: 10 }
+      code: "Et hul",
+      name: "Kiks",
+      lat: 55.713207,
+      lon: 9.989786,
+      people: 2,
+      solveAt: "44:00",
+      rewardsMin: { first: 7, second: 5, third: 3 }
     },
     {
-      code: "6789",
-      name: "Post 6",
-      lat: 55.7137,
-      lon: 9.989384,
-      popup: "Post 6: Støvlevasken<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: { color: "blue", title: "Blå mission låst op", people: 3, startOffsetMin: 8, rewardMin: 6 }
+      code: "89",
+      name: "Det perfekte minut",
+      lat: 55.714210,
+      lon: 9.987818,
+      people: 1,
+      solveAt: "38:00",
+      rewardsMin: { first: 5, second: 3, third: 1 }
     },
     {
-      code: "7891",
-      name: "Post 7",
-      lat: 55.713724,
-      lon: 9.987689,
-      popup: "Post 7: Crossfit<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: { color: "red", title: "Rød mission låst op", people: 4, startOffsetMin: 6, rewardMin: 8 }
+      code: "Fællesskab",
+      name: "Det længste kast",
+      lat: 55.714964,
+      lon: 9.989044,
+      people: 2,
+      solveAt: "36:00",
+      rewardsMin: { first: 7, second: 5, third: 3 }
     },
     {
-      code: "8912",
-      name: "Post 8",
-      lat: 55.712535,
-      lon: 9.987702,
-      popup: "Post 8: Hellebjerg skiltet<br><i>Indtast næste kode for at fortsætte…</i>",
-      mission: { color: "black", title: "Sidste mission låst op", people: 6, startOffsetMin: 5, rewardMin: 12 }
+      code: "Tidspres",
+      name: "Mumsmissionen",
+      lat: 55.714106,
+      lon: 9.989652,
+      people: 4,
+      solveAt: "35:00",
+      rewardsMin: { first: 11, second: 9, third: 7 }
+    },
+    {
+      code: "Et håndklæde",
+      name: "Strip?",
+      lat: 55.715076,
+      lon: 9.987631,
+      people: 3,
+      solveAt: "30:00",
+      rewardsMin: { first: 9, second: 7, third: 5 }
+    },
+    {
+      code: "160",
+      name: "PastaPolo?",
+      lat: 55.714213,
+      lon: 9.987824,
+      people: 3,
+      solveAt: "25:00",
+      rewardsMin: { first: 9, second: 7, third: 5 }
+    },
+    {
+      code: "1111",
+      name: "Det skete ægge",
+      lat: 55.715019,
+      lon: 9.989009,
+      people: 3,
+      solveAt: "20:00",
+      rewardsMin: { first: 9, second: 7, third: 5 }
+    },
+    {
+      code: "K",
+      name: "Flest stik",
+      lat: 55.713875,
+      lon: 9.989042,
+      people: 1,
+      solveAt: "16:00",
+      rewardsMin: { first: 5, second: 3, third: 1 }
+    },
+    {
+      code: "12/100",
+      name: "Det skæve tårn i Piza",
+      lat: 55.714214,
+      lon: 9.990110,
+      people: 3,
+      solveAt: "14:00",
+      rewardsMin: { first: 9, second: 7, third: 5 }
+    },
+    {
+      code: "16",
+      name: "De bedste lunger",
+      lat: 55.714198,
+      lon: 9.987870,
+      people: 1,
+      solveAt: "10:00",
+      rewardsMin: { first: 5, second: 3, third: 1 }
+    },
+    {
+      code: "B",
+      name: "Tegn og gæt",
+      lat: 55.714598,
+      lon: 9.989203,
+      people: 2,
+      solveAt: "06:00",
+      rewardsMin: { first: 7, second: 5, third: 3 }
     }
   ];
 
+  // Beholder navnet POSTS i resten af koden, så den gamle logik stadig virker.
+  const POSTS = MISSIONS;
+
   const START_CODE = "Start";
+
+  // Automatisk fælles starttid.
+  // Alle, der har tastet korrekt startkode før dette tidspunkt, starter automatisk samtidig.
+  const AUTO_START_HOUR = 01;
+  const AUTO_START_MINUTE = 05;
 
   const SHOW_HALO = false;
   const USE_MAX_BOUNDS = false;
@@ -764,15 +899,23 @@
   const ADJUSTMENT_MS = 30 * 1000;
   const WRONG_ANSWER_PENALTY_MS = 30 * 1000;
 
+
+  // HER RETTER DU STATUSVINDUET
+  // fromMin/toMin = minutter inde i løbet, regnet fra start ved 60:00 på den faste timer.
+  const ACTIVITY_STATUS_PLAN = [
+    { fromMin: 0,  toMin: 10, tidsbodOpen: true,  duelsOpen: false },
+    { fromMin: 10, toMin: 25, tidsbodOpen: false, duelsOpen: true  },
+    { fromMin: 25, toMin: 35, tidsbodOpen: false, duelsOpen: false },
+    { fromMin: 35, toMin: 45, tidsbodOpen: true,  duelsOpen: false },
+    { fromMin: 45, toMin: 60, tidsbodOpen: false, duelsOpen: true  }
+  ];
+
   let adjustableEndAt = null;
   let fixedEndAt = null;
   let timerTick = null;
-  let randomMissionTimeout = null;
-
   let gameIsFinished = false;
   let finalPhaseActive = false;
-  let randomMissionHasAppeared = false;
-
+  let currentActivityStatusIndex = null;
   let nextIndex = 0;
   let gameLayer;
 
@@ -788,6 +931,31 @@
     return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
   }
 
+  function getScheduledStartAt(){
+    const start = new Date();
+    start.setHours(AUTO_START_HOUR, AUTO_START_MINUTE, 0, 0);
+    return start.getTime();
+  }
+
+  function formatStartClock(){
+    return String(AUTO_START_HOUR).padStart(2, "0") + ":" + String(AUTO_START_MINUTE).padStart(2, "0");
+  }
+
+  function formatCountdown(ms){
+    const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+
+    if (h > 0){
+      return String(h).padStart(2, "0") + ":" +
+        String(m).padStart(2, "0") + ":" +
+        String(s).padStart(2, "0");
+    }
+
+    return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+  }
+
   function getClockTimeFromNow(minutesFromNow){
     const d = new Date(Date.now() + minutesFromNow * 60 * 1000);
 
@@ -798,15 +966,94 @@
   }
 
   function currentAdjustmentMs(){
-    return finalPhaseActive ? ADJUSTMENT_MS * 2 : ADJUSTMENT_MS;
+    return ADJUSTMENT_MS;
   }
 
   function currentWrongPenaltyMs(){
-    return finalPhaseActive ? WRONG_ANSWER_PENALTY_MS * 2 : WRONG_ANSWER_PENALTY_MS;
+    return WRONG_ANSWER_PENALTY_MS;
   }
 
   function formatReward(rewardMin){
-    return finalPhaseActive ? rewardMin * 2 : rewardMin;
+    return rewardMin;
+  }
+
+  function formatSolveAt(mission){
+    return mission.solveAt || "--:--";
+  }
+
+
+  function statusText(isOpen){
+    return isOpen ? "Åben" : "Lukket";
+  }
+
+  function statusClass(isOpen){
+    return isOpen ? "open" : "closed";
+  }
+
+  function getActivityStatusIndex(fixedLeft){
+    const elapsedMin = Math.floor((START_DURATION_MS - fixedLeft) / 60000);
+
+    for (let i = 0; i < ACTIVITY_STATUS_PLAN.length; i++){
+      const phase = ACTIVITY_STATUS_PLAN[i];
+
+      if (elapsedMin >= phase.fromMin && elapsedMin < phase.toMin){
+        return i;
+      }
+    }
+
+    return ACTIVITY_STATUS_PLAN.length - 1;
+  }
+
+  function openActivityStatus(){
+    const shell = document.getElementById("activity-status-shell");
+    const text = document.getElementById("activityStatusToggleText");
+
+    if (!shell || !text) return;
+
+    shell.style.display = "flex";
+    shell.classList.remove("collapsed");
+    text.textContent = "Skjul status";
+  }
+
+  function toggleActivityStatus(){
+    const shell = document.getElementById("activity-status-shell");
+    const text = document.getElementById("activityStatusToggleText");
+
+    if (!shell || !text) return;
+
+    shell.classList.toggle("collapsed");
+    shell.style.display = "flex";
+
+    if (shell.classList.contains("collapsed")){
+      text.textContent = "Vis status";
+    } else {
+      text.textContent = "Skjul status";
+    }
+  }
+
+  function updateActivityStatus(fixedLeft){
+    const idx = getActivityStatusIndex(fixedLeft);
+    const phase = ACTIVITY_STATUS_PLAN[idx];
+
+    const tidsbodEl = document.getElementById("tidsbodStatus");
+    const duelEl = document.getElementById("duelStatus");
+    const card = document.getElementById("activity-status-card");
+
+    if (!phase || !tidsbodEl || !duelEl) return;
+
+    tidsbodEl.innerHTML = `Tidsbod (Foredragssal): <span class="${statusClass(phase.tidsbodOpen)}">${statusText(phase.tidsbodOpen)}</span>`;
+    duelEl.innerHTML = `Dueller (Hallen): <span class="${statusClass(phase.duelsOpen)}">${statusText(phase.duelsOpen)}</span>`;
+
+    if (currentActivityStatusIndex !== idx){
+      currentActivityStatusIndex = idx;
+      openActivityStatus();
+
+      if (card){
+        card.classList.remove("status-flash");
+        void card.offsetWidth;
+        card.classList.add("status-flash");
+      }
+    }
   }
 
   function renderTimers(){
@@ -819,6 +1066,8 @@
 
     const adjustableEl = document.getElementById("adjustableTimer");
     const fixedEl = document.getElementById("fixedTimer");
+
+    updateActivityStatus(fixedLeft);
 
     if (!finalPhaseActive && fixedLeft <= FINAL_PHASE_MS && fixedLeft > 0){
       activateFinalPhase();
@@ -845,13 +1094,17 @@
 
     gameIsFinished = false;
     finalPhaseActive = false;
-    randomMissionHasAppeared = false;
-
+    currentActivityStatusIndex = null;
     document.body.classList.remove("final-phase");
     document.body.classList.remove("phase-banner-closed");
 
-    adjustableEndAt = Date.now() + START_DURATION_MS;
-    fixedEndAt = Date.now() + START_DURATION_MS;
+    // Vigtigt: Timerne tager udgangspunkt i den fælles kl. 19:15-start
+    // i stedet for tidspunktet, hvor holdet trykker/indtaster startkoden.
+    const scheduledStartAt = getScheduledStartAt();
+    const scheduledEndAt = scheduledStartAt + START_DURATION_MS;
+
+    adjustableEndAt = scheduledEndAt;
+    fixedEndAt = scheduledEndAt;
 
     if (wrapper){
       wrapper.style.display = "flex";
@@ -861,67 +1114,10 @@
       clearInterval(timerTick);
     }
 
-    if (randomMissionTimeout){
-      clearTimeout(randomMissionTimeout);
-    }
-
-    scheduleRandomMissionAroundMiddle();
-
     updateTimerButtonLabels();
     renderTimers();
 
     timerTick = setInterval(renderTimers, 250);
-  }
-
-  function scheduleRandomMissionAroundMiddle(){
-    const minDelay = 25 * 60 * 1000;
-    const maxDelay = 35 * 60 * 1000;
-    const randomDelay = Math.floor(minDelay + Math.random() * (maxDelay - minDelay));
-
-    randomMissionTimeout = setTimeout(() => {
-      if (!gameIsFinished && !randomMissionHasAppeared){
-        showRandomMission();
-      }
-    }, randomDelay);
-  }
-
-  function showRandomMission(){
-    randomMissionHasAppeared = true;
-
-    const popup = document.getElementById("random-mission-popup");
-
-    const mission = {
-      color: "red",
-      title: "Rød mission låst op",
-      people: 4,
-      startOffsetMin: 3,
-      rewardMin: 7
-    };
-
-    const title = document.getElementById("randomMissionTitle");
-    const people = document.getElementById("randomMissionPeople");
-    const start = document.getElementById("randomMissionStart");
-    const reward = document.getElementById("randomMissionReward");
-
-    if (title) title.textContent = mission.title;
-    if (people) people.textContent = `Kræver ${mission.people} personer.`;
-    if (start) start.textContent = `Start kl. ${getClockTimeFromNow(mission.startOffsetMin)}.`;
-    if (reward) reward.textContent = `Belønning: +${formatReward(mission.rewardMin)} minutter.`;
-
-    if (popup){
-      popup.style.display = "grid";
-    }
-
-    addMissionCard(mission);
-    setFeedback("Akut mission låst op! Kig på missionstavlen.", true);
-  }
-
-  function closeRandomMissionPopup(){
-    const popup = document.getElementById("random-mission-popup");
-
-    if (popup){
-      popup.style.display = "none";
-    }
   }
 
   function activateFinalPhase(){
@@ -932,17 +1128,8 @@
 
     updateTimerButtonLabels();
 
-    const finalMission = {
-      color: "black",
-      title: "Sidste mission er låst op",
-      people: 6,
-      startOffsetMin: 2,
-      rewardMin: 12
-    };
 
-    addMissionCard(finalMission);
-
-    setFeedback("SLUTFASE AKTIVERET! Bonusser tæller dobbelt. Forkerte svar giver dobbelt straf.", true);
+    setFeedback("Slutfase - 10 minutter tilbage", true);
   }
 
   function closePhaseBanner(){
@@ -954,11 +1141,11 @@
     const minus = document.getElementById("minus30Btn");
 
     if (plus){
-      plus.textContent = finalPhaseActive ? "+60 sek" : "+30 sek";
+      plus.textContent = "+30 sek";
     }
 
     if (minus){
-      minus.textContent = finalPhaseActive ? "-60 sek" : "-30 sek";
+      minus.textContent = "-30 sek";
     }
   }
 
@@ -971,16 +1158,21 @@
     shell.style.display = "flex";
 
     const card = document.createElement("div");
-    card.className = `mission-card ${mission.color || "red"}`;
+    card.className = "mission-card";
 
-    const reward = formatReward(mission.rewardMin);
-    const startTime = getClockTimeFromNow(mission.startOffsetMin);
+    const multiplierText = "";
+    const first = formatReward(mission.rewardsMin.first);
+    const second = formatReward(mission.rewardsMin.second);
+    const third = formatReward(mission.rewardsMin.third);
 
     card.innerHTML = `
-      <h3>${mission.title}</h3>
+      <h3>${mission.name}</h3>
+      <p><strong>Skal løses ved fast tid: ${formatSolveAt(mission)}</strong></p>
       <p>Kræver ${mission.people} personer.</p>
-      <p>Start kl. ${startTime}.</p>
-      <p>Belønning: +${reward} minutter${finalPhaseActive ? " — slutfase x2" : ""}.</p>
+      <p>1. plads: +${first} minutter${multiplierText}.</p>
+      <p>2. plads: +${second} minutter${multiplierText}.</p>
+      <p>3. plads: +${third} minutter${multiplierText}.</p>
+      <p>Øvrige placeringer: +0 minutter.</p>
     `;
 
     board.prepend(card);
@@ -1032,11 +1224,7 @@
 
     adjustAdjustableTimer(-penalty);
 
-    if (finalPhaseActive){
-      setFeedback("Forkert kode – dobbelt straf i slutfasen: -60 sek.", false);
-    } else {
-      setFeedback("Forkert kode – prøv igen. Straf: -30 sek.", false);
-    }
+    setFeedback("Forkert kode – prøv igen. Straf: -30 sek.", false);
   }
 
   function finishGameByFixedTimer(scoreMs){
@@ -1047,15 +1235,13 @@
       timerTick = null;
     }
 
-    if (randomMissionTimeout){
-      clearTimeout(randomMissionTimeout);
-      randomMissionTimeout = null;
-    }
 
     const scoreText = mmss(scoreMs);
 
     const adjustableEl = document.getElementById("adjustableTimer");
     const fixedEl = document.getElementById("fixedTimer");
+
+    updateActivityStatus(0);
 
     if (adjustableEl){
       adjustableEl.textContent = scoreText;
@@ -1101,9 +1287,15 @@
   }
 
   function showPost(p){
-    L.marker([p.lat, p.lon], { icon: makeDivIcon() })
+    const marker = L.marker([p.lat, p.lon], { icon: makeDivIcon() })
       .addTo(gameLayer)
-      .bindPopup(p.popup)
+      .bindPopup(`<b>${p.name}</b><br><strong>Skal løses ved fast tid: ${formatSolveAt(p)}</strong><br><i>Indtast næste kode for at fortsætte…</i>`)
+      .bindTooltip(p.name, {
+        permanent: true,
+        direction: "top",
+        offset: [0, -12],
+        opacity: 0.95
+      })
       .openPopup();
 
     if (SHOW_HALO){
@@ -1180,9 +1372,7 @@
 
     showPost(expected);
 
-    if (expected.mission){
-      addMissionCard(expected.mission);
-    }
+    addMissionCard(expected);
 
     nextIndex = Math.min(nextIndex + 1, POSTS.length);
 
@@ -1225,64 +1415,120 @@
     }
   }
 
+  function launchGame(){
+    const gate = document.getElementById("start-gate");
+
+    if (gate){
+      gate.style.display = "none";
+    }
+
+    nextIndex = 0;
+    gameIsFinished = false;
+    finalPhaseActive = false;
+    document.body.classList.remove("final-phase");
+    document.body.classList.remove("phase-banner-closed");
+
+    const missionShell = document.getElementById("mission-board-shell");
+    const missionBoard = document.getElementById("mission-board");
+    const missionToggleText = document.getElementById("missionToggleText");
+    const activityStatusShell = document.getElementById("activity-status-shell");
+    const activityStatusToggleText = document.getElementById("activityStatusToggleText");
+
+    if (missionBoard){
+      missionBoard.innerHTML = "";
+    }
+
+    if (missionShell){
+      missionShell.style.display = "none";
+      missionShell.classList.remove("collapsed");
+    }
+
+    if (missionToggleText){
+      missionToggleText.textContent = "Skjul missioner";
+    }
+
+    if (activityStatusShell){
+      activityStatusShell.style.display = "flex";
+      activityStatusShell.classList.remove("collapsed");
+    }
+
+    if (activityStatusToggleText){
+      activityStatusToggleText.textContent = "Skjul status";
+    }
+
+    currentActivityStatusIndex = null;
+
+    updateMissionCount();
+
+    const kodeInput = document.getElementById("kode");
+    const checkButton = document.getElementById("checkBtn");
+    const plus = document.getElementById("plus30Btn");
+    const minus = document.getElementById("minus30Btn");
+
+    if (kodeInput) kodeInput.disabled = false;
+    if (checkButton) checkButton.disabled = false;
+    if (plus) plus.disabled = false;
+    if (minus) minus.disabled = false;
+
+    if (gameLayer){
+      gameLayer.clearLayers();
+    }
+
+    updateProgress();
+
+    startTimers();
+
+    autoFocusMobile(document.getElementById("kode"));
+  }
+
   function initGate(){
     const btn = document.getElementById("startBtn");
     const inp = document.getElementById("startCode");
     const msg = document.getElementById("startMsg");
 
+    let waitingTick = null;
+
     autoFocusMobile(inp);
 
+    function startOrWaitUntil1915(){
+      const scheduledStartAt = getScheduledStartAt();
+
+      if (Date.now() >= scheduledStartAt){
+        launchGame();
+        return;
+      }
+
+      if (btn) btn.disabled = true;
+      if (inp) inp.disabled = true;
+
+      function updateWaitingMessage(){
+        const left = scheduledStartAt - Date.now();
+
+        if (left <= 0){
+          if (waitingTick){
+            clearInterval(waitingTick);
+            waitingTick = null;
+          }
+
+          launchGame();
+          return;
+        }
+
+        if (msg){
+          msg.style.color = "var(--ok)";
+          msg.textContent = `Korrekt kode. Løbet starter automatisk kl. ${formatStartClock()} – om ${formatCountdown(left)}.`;
+        }
+      }
+
+      updateWaitingMessage();
+      waitingTick = setInterval(updateWaitingMessage, 250);
+    }
+
     function openIfValid(){
-      if ((inp.value || "").trim() === START_CODE){
-        document.getElementById("start-gate").style.display = "none";
-
-        nextIndex = 0;
-        gameIsFinished = false;
-        finalPhaseActive = false;
-        randomMissionHasAppeared = false;
-
-        document.body.classList.remove("final-phase");
-        document.body.classList.remove("phase-banner-closed");
-
-        const missionShell = document.getElementById("mission-board-shell");
-        const missionBoard = document.getElementById("mission-board");
-        const missionToggleText = document.getElementById("missionToggleText");
-
-        if (missionBoard){
-          missionBoard.innerHTML = "";
-        }
-
-        if (missionShell){
-          missionShell.style.display = "none";
-          missionShell.classList.remove("collapsed");
-        }
-
-        if (missionToggleText){
-          missionToggleText.textContent = "Skjul missioner";
-        }
-
-        updateMissionCount();
-
-        const kodeInput = document.getElementById("kode");
-        const checkButton = document.getElementById("checkBtn");
-        const plus = document.getElementById("plus30Btn");
-        const minus = document.getElementById("minus30Btn");
-
-        if (kodeInput) kodeInput.disabled = false;
-        if (checkButton) checkButton.disabled = false;
-        if (plus) plus.disabled = false;
-        if (minus) minus.disabled = false;
-
-        if (gameLayer){
-          gameLayer.clearLayers();
-        }
-
-        updateProgress();
-
-        startTimers();
-
-        autoFocusMobile(document.getElementById("kode"));
+      if ((inp.value || "").trim().toLowerCase() === START_CODE.toLowerCase()){
+        startOrWaitUntil1915();
       } else {
+        msg.style.color = "var(--err)";
         msg.textContent = "Forkert startkode.";
         autoFocusMobile(inp);
       }
@@ -1305,9 +1551,9 @@
 
     const plus30Btn = document.getElementById("plus30Btn");
     const minus30Btn = document.getElementById("minus30Btn");
-    const closeRandomMissionBtn = document.getElementById("closeRandomMissionBtn");
     const closePhaseBannerBtn = document.getElementById("closePhaseBannerBtn");
     const missionToggleBtn = document.getElementById("missionToggleBtn");
+    const activityStatusToggleBtn = document.getElementById("activityStatusToggleBtn");
 
     if (checkBtn){
       checkBtn.addEventListener("click", checkKode);
@@ -1330,16 +1576,16 @@
       minus30Btn.addEventListener("click", () => adjustAdjustableTimer(-currentAdjustmentMs()));
     }
 
-    if (closeRandomMissionBtn){
-      closeRandomMissionBtn.addEventListener("click", closeRandomMissionPopup);
-    }
-
     if (closePhaseBannerBtn){
       closePhaseBannerBtn.addEventListener("click", closePhaseBanner);
     }
 
     if (missionToggleBtn){
       missionToggleBtn.addEventListener("click", toggleMissionBoard);
+    }
+
+    if (activityStatusToggleBtn){
+      activityStatusToggleBtn.addEventListener("click", toggleActivityStatus);
     }
 
     initGate();
