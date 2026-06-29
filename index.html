@@ -885,9 +885,9 @@
   const START_CODE = "Start";
 
   // Automatisk fælles starttid.
-  // Alle, der har tastet korrekt startkode før dette tidspunkt, starter automatisk samtidig.
-  const AUTO_START_HOUR = 01;
-  const AUTO_START_MINUTE = 05;
+  // Skriv tidspunktet som tekst, fx "19:15" eller "01:05".
+  // Vigtigt: Brug anførselstegn. Skriv ikke 01 eller 05 som tal i JavaScript.
+  const AUTO_START_TIME = "01:10";
 
   const SHOW_HALO = false;
   const USE_MAX_BOUNDS = false;
@@ -931,14 +931,34 @@
     return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
   }
 
+  function getAutoStartParts(){
+    const value = String(AUTO_START_TIME).trim();
+    const match = /^(\d{1,2}):(\d{2})$/.exec(value);
+
+    if (!match){
+      throw new Error('AUTO_START_TIME skal skrives som fx "19:15" eller "01:05".');
+    }
+
+    const hour = Number(match[1]);
+    const minute = Number(match[2]);
+
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59){
+      throw new Error('AUTO_START_TIME er ugyldigt. Brug et tidspunkt mellem "00:00" og "23:59".');
+    }
+
+    return { hour, minute };
+  }
+
   function getScheduledStartAt(){
+    const { hour, minute } = getAutoStartParts();
     const start = new Date();
-    start.setHours(AUTO_START_HOUR, AUTO_START_MINUTE, 0, 0);
+    start.setHours(hour, minute, 0, 0);
     return start.getTime();
   }
 
   function formatStartClock(){
-    return String(AUTO_START_HOUR).padStart(2, "0") + ":" + String(AUTO_START_MINUTE).padStart(2, "0");
+    const { hour, minute } = getAutoStartParts();
+    return String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0");
   }
 
   function formatCountdown(ms){
@@ -1098,7 +1118,7 @@
     document.body.classList.remove("final-phase");
     document.body.classList.remove("phase-banner-closed");
 
-    // Vigtigt: Timerne tager udgangspunkt i den fælles kl. 19:15-start
+    // Vigtigt: Timerne tager udgangspunkt i den fælles starttid
     // i stedet for tidspunktet, hvor holdet trykker/indtaster startkoden.
     const scheduledStartAt = getScheduledStartAt();
     const scheduledEndAt = scheduledStartAt + START_DURATION_MS;
@@ -1490,7 +1510,7 @@
 
     autoFocusMobile(inp);
 
-    function startOrWaitUntil1915(){
+    function startOrWaitUntilScheduledTime(){
       const scheduledStartAt = getScheduledStartAt();
 
       if (Date.now() >= scheduledStartAt){
@@ -1526,7 +1546,7 @@
 
     function openIfValid(){
       if ((inp.value || "").trim().toLowerCase() === START_CODE.toLowerCase()){
-        startOrWaitUntil1915();
+        startOrWaitUntilScheduledTime();
       } else {
         msg.style.color = "var(--err)";
         msg.textContent = "Forkert startkode.";
