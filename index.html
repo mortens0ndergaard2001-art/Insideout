@@ -637,7 +637,7 @@
 <div id="start-gate" aria-modal="true" role="dialog">
   <div class="gate-card">
     <h2>Start adgang</h2>
-    <p>Indtast start-kode for at åbne kortet.</p>
+    <p>Indtast start-kode. Før fælles starttid venter siden automatisk. Skriv Start igen for nød-/teststart.</p>
 
     <input id="startCode"
            type="text"
@@ -887,7 +887,7 @@
   // Automatisk fælles starttid.
   // Skriv tidspunktet som tekst, fx "19:15" eller "01:05".
   // Vigtigt: Brug anførselstegn. Skriv ikke 01 eller 05 som tal i JavaScript.
-  const AUTO_START_TIME = "01:10";
+  const AUTO_START_TIME = "19:15";
 
   const SHOW_HALO = false;
   const USE_MAX_BOUNDS = false;
@@ -1109,7 +1109,7 @@
     }
   }
 
-  function startTimers(){
+  function startTimers(forceStartNow=false){
     const wrapper = document.getElementById("timer-wrapper");
 
     gameIsFinished = false;
@@ -1118,13 +1118,13 @@
     document.body.classList.remove("final-phase");
     document.body.classList.remove("phase-banner-closed");
 
-    // Vigtigt: Timerne tager udgangspunkt i den fælles starttid
-    // i stedet for tidspunktet, hvor holdet trykker/indtaster startkoden.
-    const scheduledStartAt = getScheduledStartAt();
-    const scheduledEndAt = scheduledStartAt + START_DURATION_MS;
+    // Normal start: Timerne tager udgangspunkt i den fælles starttid, fx 19:15.
+    // Overrule/teststart: Hvis forceStartNow=true, starter timerne fra nu.
+    const startAt = forceStartNow ? Date.now() : getScheduledStartAt();
+    const endAt = startAt + START_DURATION_MS;
 
-    adjustableEndAt = scheduledEndAt;
-    fixedEndAt = scheduledEndAt;
+    adjustableEndAt = endAt;
+    fixedEndAt = endAt;
 
     if (wrapper){
       wrapper.style.display = "flex";
@@ -1435,7 +1435,7 @@
     }
   }
 
-  function launchGame(){
+  function launchGame(forceStartNow=false){
     const gate = document.getElementById("start-gate");
 
     if (gate){
@@ -1496,7 +1496,7 @@
 
     updateProgress();
 
-    startTimers();
+    startTimers(forceStartNow);
 
     autoFocusMobile(document.getElementById("kode"));
   }
@@ -1507,19 +1507,35 @@
     const msg = document.getElementById("startMsg");
 
     let waitingTick = null;
+    let isWaitingForScheduledStart = false;
 
     autoFocusMobile(inp);
+
+    function forceStartNow(){
+      if (waitingTick){
+        clearInterval(waitingTick);
+        waitingTick = null;
+      }
+
+      launchGame(true);
+    }
 
     function startOrWaitUntilScheduledTime(){
       const scheduledStartAt = getScheduledStartAt();
 
       if (Date.now() >= scheduledStartAt){
-        launchGame();
+        launchGame(false);
         return;
       }
 
-      if (btn) btn.disabled = true;
-      if (inp) inp.disabled = true;
+      isWaitingForScheduledStart = true;
+
+      if (btn) btn.textContent = "Start nu / overrule";
+      if (inp){
+        inp.disabled = false;
+        inp.value = "";
+        inp.placeholder = "Skriv Start igen for at starte nu";
+      }
 
       function updateWaitingMessage(){
         const left = scheduledStartAt - Date.now();
@@ -1530,23 +1546,32 @@
             waitingTick = null;
           }
 
-          launchGame();
+          launchGame(false);
           return;
         }
 
         if (msg){
           msg.style.color = "var(--ok)";
-          msg.textContent = `Korrekt kode. Løbet starter automatisk kl. ${formatStartClock()} – om ${formatCountdown(left)}.`;
+          msg.textContent = `Korrekt kode. Løbet starter automatisk kl. ${formatStartClock()} – om ${formatCountdown(left)}. Skriv Start igen for at starte nu/teste.`;
         }
       }
 
       updateWaitingMessage();
-      waitingTick = setInterval(updateWaitingMessage, 250);
+
+      if (!waitingTick){
+        waitingTick = setInterval(updateWaitingMessage, 250);
+      }
+
+      autoFocusMobile(inp);
     }
 
     function openIfValid(){
       if ((inp.value || "").trim().toLowerCase() === START_CODE.toLowerCase()){
-        startOrWaitUntilScheduledTime();
+        if (isWaitingForScheduledStart){
+          forceStartNow();
+        } else {
+          startOrWaitUntilScheduledTime();
+        }
       } else {
         msg.style.color = "var(--err)";
         msg.textContent = "Forkert startkode.";
